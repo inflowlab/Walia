@@ -1,2 +1,115 @@
-# Walia
-Telegram bot/assistent to interact with Walrus storage
+import { buildAndSerializeTransaction, createWalletEnvironment, getBalance, getPassPhrases, getUserEnvironment } from "./dist/wallet-demo";
+import { WalletManagement } from "./dist/walletManagement";
+
+# Wallet Management Module for Sui and Walrus
+
+A TypeScript module for managing Sui and Walrus wallet environments.
+
+## Features
+
+- Create a wallet environment for a user with:
+  - Ed25519 keypair generation
+  - Keystore management
+  - Sui and Walrus configuration files
+  - Passphrase storage
+- Retrieve user environment configurations
+- Retrieve passphrases for a user's wallet
+- Get SUI and WAL token balances
+- Build and serialize transactions for token transfers
+
+## Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+```
+
+## Usage
+
+```typescript
+
+// Create a wallet environment for a user
+const wallet = await createWalletEnvironment('alice');
+console.log('Wallet address:', wallet.address);
+
+// Get user environment
+const env = getUserEnvironment('alice');
+console.log('User environment:', env);
+
+// Get pass phrases
+const passPhrases = getPassPhrases('alice');
+console.log('Pass phrases:', passPhrases);
+
+// Get balances
+const balance = await getBalance('alice');
+console.log('Balances:', balance);
+
+// Build and serialize transaction
+const tx = await buildAndSerializeTransaction('alice', 'bob', '1000000', '0');
+console.log('Transaction:', tx);
+```
+
+## Testing
+
+The project includes comprehensive tests for the wallet management functionality:
+
+```bash
+# Run all wallet-related tests
+npx vitest run src/__tests__/wallet-demo.test.ts src/__tests__/wallet-advanced.test.ts
+
+# Run only basic wallet tests
+npx vitest run src/__tests__/wallet-demo.test.ts
+
+# Run advanced functionality tests
+npx vitest run src/__tests__/wallet-advanced.test.ts
+```
+
+## Directory Structure
+
+The wallet management module creates the following directory structure for each user:
+
+```
+wallets/
+└── {username}/
+    ├── keystore/
+    │   └── sui.keystore
+    ├── sui_client.yaml
+    ├── walrus_client_config.yaml
+    └── notes.txt
+```
+
+## Dependencies
+
+This project uses:
+- [@mysten/sui](https://github.com/MystenLabs/sui) - Sui blockchain SDK
+- [js-yaml](https://github.com/nodeca/js-yaml) - YAML parsing/generation
+
+## References
+
+- [MystenLabs/sui](https://github.com/MystenLabs/sui)
+- [MystenLabs/ts-sdks](https://github.com/MystenLabs/ts-sdks)
+- [MystenLabs/walrus](https://github.com/MystenLabs/walrus)
+
+### Update SUI CLI:
+```bash
+brew upgrade sui
+```
+
+### Start Walrus daemon:
+```bash
+PUBLISHER_WALLETS_DIR=~/.config/walrus/publisher-wallets
+mkdir -p "$PUBLISHER_WALLETS_DIR"
+walrus daemon \
+  --config ./walrus_client_config.yaml \
+  --bind-address "127.0.0.1:31415" \
+  --sub-wallets-dir "$PUBLISHER_WALLETS_DIR" \
+  --n-clients 1
+```
+
+to run a specific unit test:
+```bash
+npx vitest -t "should get detailed blob information"
+```
