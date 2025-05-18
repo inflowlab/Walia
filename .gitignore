@@ -65,4 +65,11 @@ lerna-debug.log*
 
 # Temporary directories
 tmp/
-temp/ 
+temp/
+
+# Wallet directories
+wallets/
+test-wallets/
+test-wallets-advanced/
+*wallet*/
+*keystore*/ 

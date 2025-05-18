@@ -36,11 +36,11 @@ By participating in this project, you agree to abide by our code of conduct: Be 
 2. Run the tests to ensure everything works:
    ```bash
    # Run wallet management tests
-   npx vitest run src/__tests__/wallet-demo.test.ts src/__tests__/wallet-advanced.test.ts
+   npm run test:wallet
    ```
-3. Build the project:
+3. Build the wallet module:
    ```bash
-   npm run build
+   npm run build:wallet
    ```
 
 ### Submitting Changes
@@ -61,7 +61,7 @@ We use Vitest for testing. Tests should be written for all new features and bug 
 
 ```bash
 # Run specific tests
-npx vitest run src/__tests__/wallet-demo.test.ts
+npx vitest run src/__tests__/wallet-management.test.ts
 
 # Run all tests
 npm test

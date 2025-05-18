@@ -26,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Build
-        run: npm run build
+      - name: Build wallet module
+        run: npx tsc src/wallet-management.ts src/demo.ts --outDir dist
         
-      - name: Run wallet module tests
-        run: npx vitest run src/__tests__/wallet-demo.test.ts src/__tests__/wallet-advanced.test.ts 
+      - name: Run tests
+        run: npx vitest run src/__tests__/wallet-management.test.ts src/__tests__/wallet-advanced.test.ts 

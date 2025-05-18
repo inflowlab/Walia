@@ -1,10 +1,48 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as yaml from "js-yaml";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { createWalletEnvironment, getPassPhrases, getUserEnvironment } from "../wallet-demo";
+
+import { 
+  createWalletEnvironment, 
+  getPassPhrases, 
+  getUserEnvironment, 
+  getBalance, 
+  buildAndSerializeTransaction,
+  getSuiActiveEnvironment
+} from "../wallet-management";
 
 // Create a test directory
 const TEST_DIR = path.join(process.cwd(), 'test-wallets-advanced');
+
+// Mock address that will be used in tests
+const MOCK_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+// Mock the exec function to avoid actually calling the Sui CLI
+vi.mock('child_process', () => ({
+  exec: (cmd: string, callback: (error: Error | null, result: { stdout: string, stderr: string }) => void) => {
+    // Mock the output of 'sui keytool generate ed25519 --json'
+    if (cmd === 'sui keytool generate ed25519 --json') {
+      const mockOutput = {
+        alias: null,
+        suiAddress: MOCK_ADDRESS,
+        publicBase64Key: 'ALrx3FqvT7/R8ErwdSDHYlF976KFamEasUliaL5TQh7r',
+        keyScheme: 'ed25519',
+        flag: 0,
+        mnemonic: 'casino verb current tiny glove home apart mushroom fix advance video planet',
+        peerId: 'baf1dc5aaf4fbfd1f04af07520c762517defa2856a611ab1496268be53421eeb'
+      };
+      callback(null, { stdout: JSON.stringify(mockOutput), stderr: '' });
+      
+      // Create the mock key file in the current directory (changed by process.chdir in the function)
+      fs.writeFileSync(`${MOCK_ADDRESS}.key`, 'mock key file content');
+    } else {
+      callback(new Error(`Unexpected command: ${cmd}`), { stdout: '', stderr: `Unexpected command: ${cmd}` });
+    }
+  }
+}));
+
+// No need to mock process.chdir anymore since we removed it from the implementation
 
 // Setup and teardown
 beforeAll(() => {
@@ -15,63 +53,12 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  // Clean up test directory
-  if (fs.existsSync(TEST_DIR)) {
-    fs.rmSync(TEST_DIR, { recursive: true, force: true });
-  }
+  // Do not delete test directories as requested
+  // Only clean up the mocks
+  
+  // Clear all mocks
+  vi.clearAllMocks();
 });
-
-// Mock functions for advanced wallet functionality
-async function getBalance(userName: string, baseDir = TEST_DIR): Promise<{ sui: string; wal: string }> {
-  // Check if user exists first
-  const userDir = path.join(baseDir, userName);
-  if (!fs.existsSync(userDir)) {
-    throw new Error(`User directory does not exist for ${userName}`);
-  }
-  
-  // This would normally connect to the blockchain
-  // Mock implementation returns zero balances
-  return {
-    sui: '0',
-    wal: '0'
-  };
-}
-
-async function buildAndSerializeTransaction(
-  fromUserName: string,
-  toUserName: string,
-  suiAmount: string,
-  walAmount: string,
-  baseDir = TEST_DIR
-): Promise<string> {
-  // Check if both users exist
-  const fromUserDir = path.join(baseDir, fromUserName);
-  const toUserDir = path.join(baseDir, toUserName);
-  
-  if (!fs.existsSync(fromUserDir)) {
-    throw new Error(`User directory does not exist for ${fromUserName}`);
-  }
-  
-  if (!fs.existsSync(toUserDir)) {
-    throw new Error(`User directory does not exist for ${toUserName}`);
-  }
-  
-  // Get user addresses
-  const fromUserPassPhrases = getPassPhrases(fromUserName, baseDir);
-  const toUserPassPhrases = getPassPhrases(toUserName, baseDir);
-  
-  // Mock transaction object
-  const mockTransaction = {
-    sender: fromUserPassPhrases.address,
-    recipient: toUserPassPhrases.address,
-    suiAmount,
-    walAmount,
-    timestamp: new Date().toISOString()
-  };
-  
-  // Return serialized transaction
-  return JSON.stringify(mockTransaction);
-}
 
 describe('Advanced Wallet Management Functions', () => {
   describe('getBalance', () => {
@@ -81,7 +68,7 @@ describe('Advanced Wallet Management Functions', () => {
       await createWalletEnvironment(userName, TEST_DIR);
       
       // Get balance
-      const balance = await getBalance(userName);
+      const balance = await getBalance(userName, TEST_DIR);
       
       // Check if it returns the expected structure
       expect(balance).toHaveProperty('sui');
@@ -96,9 +83,23 @@ describe('Advanced Wallet Management Functions', () => {
       const userName = 'non-existent-user';
       
       // Expect an error when trying to get balance for non-existent user
-      await expect(getBalance(userName)).rejects.toThrow(
+      await expect(getBalance(userName, TEST_DIR)).rejects.toThrow(
         `User directory does not exist for ${userName}`
       );
+    });
+
+    it('should update the active environment when getting balance', async () => {
+      // Create a wallet environment first
+      const userName = 'env-balance-test-user';
+      await createWalletEnvironment(userName, TEST_DIR);
+      
+      // Get balance with a different environment
+      const activeEnv = 'mainnet';
+      await getBalance(userName, TEST_DIR, activeEnv);
+      
+      // Check if the environment was updated
+      const env = getSuiActiveEnvironment(userName, TEST_DIR);
+      expect(env).toBe(activeEnv);
     });
   });
   
@@ -118,7 +119,8 @@ describe('Advanced Wallet Management Functions', () => {
         fromUserName,
         toUserName,
         suiAmount,
-        walAmount
+        walAmount,
+        TEST_DIR
       );
       
       // Parse the serialized transaction
@@ -130,6 +132,7 @@ describe('Advanced Wallet Management Functions', () => {
       expect(tx).toHaveProperty('suiAmount');
       expect(tx).toHaveProperty('walAmount');
       expect(tx).toHaveProperty('timestamp');
+      expect(tx).toHaveProperty('network');
       
       // Check if sender and recipient match
       expect(tx.sender).toBe(fromWallet.address);
@@ -138,6 +141,9 @@ describe('Advanced Wallet Management Functions', () => {
       // Check if amounts match
       expect(tx.suiAmount).toBe(suiAmount);
       expect(tx.walAmount).toBe(walAmount);
+      
+      // Check if network matches the default
+      expect(tx.network).toBe('testnet');
     });
     
     it('should throw error if sender does not exist', async () => {
@@ -152,7 +158,8 @@ describe('Advanced Wallet Management Functions', () => {
         fromUserName,
         toUserName,
         '1000000',
-        '0'
+        '0',
+        TEST_DIR
       )).rejects.toThrow(
         `User directory does not exist for ${fromUserName}`
       );
@@ -170,10 +177,41 @@ describe('Advanced Wallet Management Functions', () => {
         fromUserName,
         toUserName,
         '1000000',
-        '0'
+        '0',
+        TEST_DIR
       )).rejects.toThrow(
         `User directory does not exist for ${toUserName}`
       );
+    });
+
+    it('should update the active environment when building transaction', async () => {
+      // Create wallet environments for sender and receiver
+      const fromUserName = 'env-tx-sender';
+      const toUserName = 'env-tx-receiver';
+      
+      await createWalletEnvironment(fromUserName, TEST_DIR);
+      await createWalletEnvironment(toUserName, TEST_DIR);
+      
+      // Build transaction with a different environment
+      const activeEnv = 'mainnet';
+      const serializedTx = await buildAndSerializeTransaction(
+        fromUserName,
+        toUserName,
+        '1000000',
+        '0',
+        TEST_DIR,
+        activeEnv
+      );
+      
+      // Parse the serialized transaction
+      const tx = JSON.parse(serializedTx);
+      
+      // Check if network in transaction matches specified environment
+      expect(tx.network).toBe(activeEnv);
+      
+      // Check if the environment was updated in the config
+      const env = getSuiActiveEnvironment(fromUserName, TEST_DIR);
+      expect(env).toBe(activeEnv);
     });
   });
 }); 
