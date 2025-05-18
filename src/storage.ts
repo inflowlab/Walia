@@ -1,12 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as yaml from "js-yaml";
 import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { fromB64 } from "@mysten/sui/utils";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { SuiKeypairInfo, readSuiKeypair } from "./wallet-management";
 
 const execAsync = promisify(exec);
 
@@ -489,7 +487,7 @@ export async function sendBlob(
         
         // Create transaction
         const tx = new Transaction();
-        tx.transferObjects([tx.object(blob.id)], tx.pure(destinationSuiAddress));
+        tx.transferObjects([tx.object(blob.id as any)], tx.pure(destinationSuiAddress));
         
         // Execute transaction
         const result = await client.signAndExecuteTransaction({
@@ -509,45 +507,6 @@ export async function sendBlob(
         console.error('Failed to send blob:', error);
         throw error;
     }
-}
-
-export interface SuiKeypairInfo {
-    keypair: Ed25519Keypair;
-    activeAddress: string;
-    activeEnv: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
-}
-
-export function readSuiKeypair(suiClientConfPath: string): SuiKeypairInfo {
-    const suiConfig = yaml.load(fs.readFileSync(suiClientConfPath, 'utf8')) as any;
-    const activeEnv = suiConfig.active_env as 'mainnet' | 'testnet' | 'devnet' | 'localnet';
-    const activeAddress = suiConfig.active_address;
-    const keystore = suiConfig.keystore.File;
-
-    // Load keypair from keystore file
-    const keystoreContent = fs.readFileSync(keystore, 'utf8');
-    const keystoreData = JSON.parse(keystoreContent);
-
-    let keypair: Ed25519Keypair | undefined = undefined;
-
-    for (const base64Key of keystoreData) {
-        // Remove the flag byte (first byte)
-        const secretKey = fromB64(base64Key).slice(1);
-        const candidate = Ed25519Keypair.fromSecretKey(secretKey);
-        if (candidate.getPublicKey().toSuiAddress() === activeAddress) {
-            keypair = candidate;
-            break;
-        }
-    }
-
-    if (!keypair) {
-        throw new Error('No matching keypair found for address');
-    }
-    
-    return {
-        keypair,
-        activeAddress,
-        activeEnv
-    };
 }
 
 

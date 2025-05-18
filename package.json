@@ -11,7 +11,14 @@
     "watch": "tsc -w",
     "test": "vitest run",
     "test:wallet": "vitest run src/__tests__/wallet-management.test.ts src/__tests__/wallet-advanced.test.ts",
-    "test:watch": "vitest"
+    "test:wallet:class": "vitest run src/__tests__/wallet-class.test.ts",
+    "test:watch": "vitest",
+    "demo": "ts-node src/demo.ts",
+    "create-dev-wallet": "ts-node src/demo.ts # Usage: npm run create-dev-wallet -- --userName=walia --walletsDir=./dev-wallets --environment=testnet",
+    "test-dev-wallet": "ts-node src/test-dev-wallet.ts # Usage: npm run test-dev-wallet -- --userName=walia --walletsDir=./dev-wallets --environment=testnet",
+    "clean-wallets": "ts-node src/clean-wallets.ts # Usage: npm run clean-wallets",
+    "clean-wallets:dry": "ts-node src/clean-wallets.ts --dry-run # Check what would be deleted without removing files",
+    "clean-wallets:all": "ts-node src/clean-wallets.ts --include-dev # Also clean development wallets"
   },
   "keywords": [],
   "author": "",

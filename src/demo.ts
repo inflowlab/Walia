@@ -1,71 +1,100 @@
-import { 
-  buildAndSerializeTransaction, 
-  createWalletEnvironment, 
-  getBalance, 
-  getPassPhrases, 
-  getUserEnvironment, 
-  setActiveEnvironment,
-  getSuiActiveEnvironment
-} from "./wallet-management";
+import * as fs from "fs";
+import * as path from "path";
+import { WalletManagement } from "./wallet-management";
+
+// Parse command-line arguments with defaults
+function parseArgs() {
+  // Default values
+  const defaults = {
+    userName: 'walia',
+    walletsDir: path.join(process.cwd(), 'dev-wallets'),
+    environment: 'testnet'
+  };
+
+  // Parse command-line args (format: --key=value)
+  const args = process.argv.slice(2);
+  const parsedArgs: Record<string, string> = {};
+  
+  for (const arg of args) {
+    if (arg.startsWith('--')) {
+      const [key, value] = arg.substring(2).split('=');
+      if (key && value) {
+        parsedArgs[key] = value;
+      }
+    }
+  }
+  
+  return {
+    userName: parsedArgs.userName || defaults.userName,
+    walletsDir: parsedArgs.walletsDir || defaults.walletsDir,
+    environment: (parsedArgs.environment || defaults.environment) as 'testnet' | 'mainnet' | 'devnet' | 'localnet'
+  };
+}
 
 async function main() {
-  console.log('Wallet Management Demo');
-  
   try {
-    // Create a wallet environment for a user
-    console.log('Creating wallet environment for Alice...');
-    const aliceWallet = await createWalletEnvironment('alice');
-    console.log('Alice wallet created:', aliceWallet.address);
+    const config = parseArgs();
     
-    // Create another wallet for testing transfers with specified environment
-    console.log('Creating wallet environment for Bob with mainnet environment...');
-    const bobWallet = await createWalletEnvironment('bob', undefined, 'mainnet');
-    console.log('Bob wallet created:', bobWallet.address);
+    console.log('Walia Development Wallet Setup');
+    console.log('=============================');
+    console.log('Configuration:');
+    console.log(`- User Name: ${config.userName}`);
+    console.log(`- Wallets Directory: ${config.walletsDir}`);
+    console.log(`- Environment: ${config.environment}`);
     
-    // Get user environment
-    console.log('Getting user environment for Alice...');
-    const aliceEnv = getUserEnvironment('alice');
-    console.log('Alice environment:', aliceEnv);
+    // Create wallets directory if it doesn't exist
+    if (!fs.existsSync(config.walletsDir)) {
+      fs.mkdirSync(config.walletsDir, { recursive: true });
+      console.log(`\nCreated wallets directory: ${config.walletsDir}`);
+    }
     
-    // Get pass phrases
-    console.log('Getting pass phrases for Alice...');
-    const alicePassPhrases = getPassPhrases('alice');
-    console.log('Alice pass phrases:', alicePassPhrases);
+    // Create a new wallet management instance for the user
+    console.log(`\nCreating development wallet for user: ${config.userName}`);
+    const wallet = new WalletManagement(config.userName, config.walletsDir, config.environment);
     
-    // Get current active environment
-    console.log('Getting current active environment for Alice...');
-    const aliceActiveEnv = getSuiActiveEnvironment('alice');
-    console.log('Alice active environment:', aliceActiveEnv);
+    // Ensure wallet exists
+    console.log('Ensuring wallet exists...');
+    const walletInfo = await wallet.ensureWallet();
+    console.log(`\nWallet created successfully:`);
+    console.log(`- Wallet address: ${walletInfo.address}`);
     
-    // Get current active environment for Bob
-    console.log('Getting current active environment for Bob...');
-    const bobActiveEnv = getSuiActiveEnvironment('bob');
-    console.log('Bob active environment:', bobActiveEnv);
+    // Get balance from the blockchain
+    console.log('\nFetching initial balance from the blockchain...');
+    const balance = await wallet.getBalance();
+    console.log(`- SUI Balance: ${balance.sui} SUI`);
+    console.log(`- WAL Balance: ${balance.wal} WAL`);
     
-    // Change Alice's environment to mainnet
-    console.log('Changing Alice\'s environment to mainnet...');
-    setActiveEnvironment('alice', 'mainnet');
-    const aliceNewEnv = getSuiActiveEnvironment('alice');
-    console.log('Alice new environment:', aliceNewEnv);
+    // Get wallet directory
+    const walletDir = wallet.getWalletDirectory();
+    console.log(`\nWallet is stored at: ${walletDir}`);
     
-    // Get balances
-    console.log('Getting balances for Alice...');
-    const aliceBalance = await getBalance('alice');
-    console.log('Alice balance:', aliceBalance);
+    // Get mnemonic (for dev purposes only - would be kept secure in production)
+    const { mnemonic } = wallet.getPassPhrases();
+    console.log('\nRecovery phrase (save this somewhere secure!):', mnemonic);
     
-    // Build and serialize transaction, specifying devnet environment
-    console.log('Building transaction from Alice to Bob on devnet...');
-    const tx = await buildAndSerializeTransaction('alice', 'bob', '1000000', '0', undefined, 'devnet');
-    console.log('Transaction:', tx);
-    const txObj = JSON.parse(tx);
-    console.log('Transaction environment:', txObj.network);
+    // Display keypair info
+    console.log('\nKeypair information:');
+    const keypairInfo = wallet.readSuiKeypair();
+    console.log(`- Active address: ${keypairInfo.activeAddress}`);
+    console.log(`- Active environment: ${keypairInfo.activeEnv}`);
     
-    // Verify that Alice's environment was changed to devnet
-    const aliceFinalEnv = getSuiActiveEnvironment('alice');
-    console.log('Alice final environment after transaction:', aliceFinalEnv);
+    console.log('\n✅ Development wallet created successfully!');
+    console.log('\n🔍 To use this wallet for integration testing:');
+    console.log(`1. Import the mnemonic into the Sui wallet extension to fund it`);
+    console.log(`2. Use the WalletManagement class with the following configuration:`);
+    console.log(`   const wallet = new WalletManagement('${config.userName}', '${config.walletsDir}', '${config.environment}');`);
     
-  } catch (error: any) {
-    console.error('Error:', error.message);
+    console.log('\n🧪 To use in unit tests, add this configuration to your test files:');
+    console.log(`   const DEV_WALLET = {`);
+    console.log(`     userName: '${config.userName}',`);
+    console.log(`     baseDir: '${config.walletsDir}',`);
+    console.log(`     address: '${walletInfo.address}'`);
+    console.log(`   };`);
+    
+    console.log('\n📄 Command to create this wallet again:');
+    console.log(`   npm run create-dev-wallet -- --userName=${config.userName} --walletsDir=${config.walletsDir} --environment=${config.environment}`);
+  } catch (error) {
+    console.error('Error in wallet setup:', error);
   }
 }
 
