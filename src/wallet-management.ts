@@ -11,6 +11,12 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+export interface ClientConfig {
+  suiCongPath: string;
+  walrusConfPath: string;
+}
+
+
 interface WalletInfo {
   address: string;
   mnemonic: string;

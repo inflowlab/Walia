@@ -1,5 +1,9 @@
 import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
+import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
+import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
 import { WalletManagement } from "../wallet-management";
+import { ClientConfig } from "./wallet-management";
+import { WalrusCostEstimator } from "./walrus-cost-estimator";
 
 ```typescript
 import { 
@@ -18,17 +22,17 @@ A TypeScript module for managing Sui and Walrus wallet environments.
 ## Features
 
 - Create a wallet environment for a user with:
-  - Ed25519 keypair generation
-  - Keystore management
-  - Sui and Walrus configuration files
-  - Passphrase storage
+- Ed25519 keypair generation
+- Keystore management
+- Sui and Walrus configuration files
+- Passphrase storage
 - Retrieve user environment configurations
 - Retrieve passphrases for a user's wallet
 - Get SUI and WAL token balances
 - Build and serialize transactions for token transfers
 - Automatically check and update Walrus configurations from the official source
-  - Updates all user wallets while preserving wallet-specific settings
-  - Single-user or all-users updating options
+- Updates all user wallets while preserving wallet-specific settings
+- Single-user or all-users updating options
 
 ## Installation
 
@@ -144,22 +148,24 @@ The script will create the wallet and display:
 
 ### Testing the Development Wallet
 
-After creating a development wallet, you can test its functionality:
+After creating a development wallet, you can test its functionality by writing integration tests that use the wallet configuration:
 
-```bash
-# Test the wallet with default settings
-npm run test-dev-wallet
+```typescript
+// Sample integration test using the development wallet
 
-# Test a wallet with custom parameters
-npm run test-dev-wallet -- --userName=myTestWallet --walletsDir=./dev-wallets --environment=testnet
+// Import your development wallet configuration
+
+test('should connect to the Walrus network', async () => {
+  // Create a cost estimator using the dev wallet
+  const estimator = new WalrusCostEstimator(DEV_CLIENT_CONFIG);
+  await estimator.initialize();
+  
+  // Get system information
+  const info = estimator.getWalrusInfo();
+  expect(info).toBeDefined();
+  expect(info?.epochInfo.currentEpoch).toBeGreaterThan(0);
+});
 ```
-
-The test script will:
-1. Verify the wallet exists and check its balance
-2. Fetch Walrus system information
-3. List existing storage blobs
-4. Create and store a test file if the wallet has sufficient SUI balance
-5. Read back the stored file to verify storage works correctly
 
 ### Cleaning Up Wallet Directories
 
@@ -264,7 +270,7 @@ walrus daemon \
   --n-clients 1
 ```
 
-to run a specific unit test:
+To run a specific unit test:
 ```bash
 npx vitest -t "should get detailed blob information"
 ```

@@ -2,19 +2,15 @@ import * as fs from "fs";
 import * as path from "path";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
+import { Inputs } from "@mysten/sui/transactions";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { SuiKeypairInfo, readSuiKeypair } from "./wallet-management";
+import { ClientConfig, readSuiKeypair } from "./wallet-management";
+import { WalrusCostEstimator } from "./walrus-cost-estimator";
 
 const execAsync = promisify(exec);
 
 const WAL_TO_FROST = 1_000_000_000; // 1 WAL = 1,000,000,000 FROST
-const MIB = 1024 * 1024; // 1 MiB in bytes
-
-export interface ClientConfig {
-    suiCongPath: string;
-    walrusConfPath: string;
-}
 
 export interface BlobAttributes {
     [key: string]: string;
@@ -97,9 +93,6 @@ export async function store(filePath: string, params: BlobParams): Promise<Store
             console.error('CLI warning:', stderr);
         }
 
-        console.log('Store command:', command);
-
-        console.log('CLI output:', stdout);
         const responses: WalrusStoreResponse[] = JSON.parse(stdout);
         
         if (!Array.isArray(responses) || responses.length === 0) {
@@ -135,18 +128,14 @@ export async function store(filePath: string, params: BlobParams): Promise<Store
             return result;
         } else if (storeResult?.alreadyCertified?.blobId) {
             // For already certified blobs, we need to get the additional info
-            const info = await getInfo(params.clientConf);
-            const epochDurationMs = info.epochInfo.epochDuration.secs * 1000;
-            const endDateTime = new Date(Date.now() + (epochDurationMs * (params.epochs ?? 1)));
-            
-            const dryRunResult = await estimateResourceConsumption(params.clientConf, filePath, endDateTime);
+        
             result = {
                 blobId: storeResult.alreadyCertified.blobId,
                 objectId: storeResult.alreadyCertified.object,
-                storageCost: dryRunResult.storageCost,
-                unencodedSize: dryRunResult.unencodedSize,
-                encodedSize: dryRunResult.encodedSize,
-                encodingType: dryRunResult.encodingType
+                storageCost: 0,
+                unencodedSize: 0,
+                encodedSize: 0,
+                encodingType: 'RS2'
             };
             
             // If attributes are provided and blob was already certified, add them
@@ -204,14 +193,11 @@ export async function add_blob_attributes(clientConf: ClientConfig, blobObjectId
         if (stderr) {
             console.error('CLI warning:', stderr);
         }
-
-        console.log('CLI output:', stdout);
     } catch (error) {
         console.error('Failed to set blob attributes:', error);
         throw error;
     }
 } 
-
 
 export async function get_blob_attributes(clientConf: ClientConfig, blobObjectId: string): Promise<BlobAttributes> {
     try {
@@ -225,7 +211,6 @@ export async function get_blob_attributes(clientConf: ClientConfig, blobObjectId
             console.error('CLI warning:', stderr);
         }
 
-        console.log('CLI output:', stdout);
         const response = JSON.parse(stdout);
         const attributes: Record<string, string> = {};
         if (response.attribute?.metadata?.contents) {
@@ -233,7 +218,6 @@ export async function get_blob_attributes(clientConf: ClientConfig, blobObjectId
                 attributes[item.key] = item.value;
             }
         }
-        console.log('Retrieved Attributes:', attributes);
         return attributes;
     } catch (error) {
         console.error('Failed to get blob attributes:', error);
@@ -257,7 +241,6 @@ export async function list_blobs(clientConf: ClientConfig, includeExpired: boole
             console.error('CLI warning:', stderr);
         }
 
-        console.log('CLI output:', stdout);
         const response = JSON.parse(stdout);
         return response || [];
     } catch (error) {
@@ -293,91 +276,12 @@ export async function burnBlobs(clientConf: ClientConfig, params: BurnParams): P
             throw new Error('Invalid burn parameters: must specify either blobObjectIds, all_expired, or all');
         }
 
-        console.log('Burn command:', command);
-
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
             console.error('CLI warning:', stderr);
         }
-
-        console.log('CLI output:', stdout);
     } catch (error) {
         console.error('Failed to burn blobs:', error);
-        throw error;
-    }
-}
-
-export interface DateTime {
-    DateTime: string;
-}
-
-export interface EpochDuration {
-    secs: number;
-    nanos: number;
-}
-
-export interface EpochInfo {
-    currentEpoch: number;
-    startOfCurrentEpoch: DateTime;
-    epochDuration: EpochDuration;
-    maxEpochsAhead: number;
-}
-
-export interface StorageInfo {
-    nShards: number;
-    nNodes: number;
-}
-
-export interface SizeInfo {
-    storageUnitSize: number;
-    maxBlobSize: number;
-}
-
-export interface ExampleBlob {
-    unencodedSize: number;
-    encodedSize: number;
-    price: number;
-    encodingType: string;
-}
-
-export interface EncodingDependentPriceInfo {
-    marginalSize: number;
-    metadataPrice: number;
-    marginalPrice: number;
-    exampleBlobs: ExampleBlob[];
-    encodingType: string;
-}
-
-export interface PriceInfo {
-    storagePricePerUnitSize: number;
-    writePricePerUnitSize: number;
-    encodingDependentPriceInfo: EncodingDependentPriceInfo[];
-}
-
-export interface WalrusInfo {
-    epochInfo: EpochInfo;
-    storageInfo: StorageInfo;
-    sizeInfo: SizeInfo;
-    priceInfo: PriceInfo;
-}
-
-export async function getInfo(clientConf: ClientConfig): Promise<WalrusInfo> {
-    try {
-        let command = `walrus info --json`;
-        
-        command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
-
-        const { stdout, stderr } = await execAsync(command);
-        if (stderr) {
-            console.error('CLI warning:', stderr);
-        }
-
-        console.log('CLI output:', stdout);
-        const response: WalrusInfo = JSON.parse(stdout);
-        return response;
-    } catch (error) {
-        console.error('Failed to get Walrus info:', error);
         throw error;
     }
 }
@@ -389,51 +293,6 @@ export interface DryRunResponse {
     encodedSize: number;
     storageCost: number;
     encodingType: string;
-}
-
-export async function estimateResourceConsumption(
-    clientConf: ClientConfig,
-    filePath: string,
-    endDateTime: Date
-): Promise<DryRunResponse> {
-    try {
-        // Get system info to calculate epochs
-        const info = await getInfo(clientConf);
-        
-        const epochDurationSecs = info.epochInfo.epochDuration.secs;
-        const startOfCurrentEpoch = new Date(info.epochInfo.startOfCurrentEpoch.DateTime);
-        
-        // Calculate epochs from the target date
-        const epochsFromStart = Math.ceil((endDateTime.getTime() - startOfCurrentEpoch.getTime()) / (epochDurationSecs * 1000));
-        
-        // Verify if the requested duration is within limits
-        if (epochsFromStart > info.epochInfo.maxEpochsAhead) {
-            throw new Error(`Cannot store for more than ${info.epochInfo.maxEpochsAhead} epochs ahead. Requested: ${epochsFromStart} epochs`);
-        }
-
-        if (epochsFromStart <= 0) {
-            throw new Error('End date must be in the future');
-        }
-
-        let command = `walrus store --json --dry-run "${filePath}" --epochs ${epochsFromStart}`;
-        command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
-
-        const { stdout, stderr } = await execAsync(command);
-        if (stderr) {
-            console.error('CLI warning:', stderr);
-        }
-
-        const responses: DryRunResponse[] = JSON.parse(stdout);
-        if (!Array.isArray(responses) || responses.length === 0) {
-            throw new Error('Invalid response: expected non-empty array');
-        }
-
-        return responses[0];
-    } catch (error) {
-        console.error('Failed to estimate resource consumption:', error);
-        throw error;
-    }
 }
 
 export async function fundSharedBlob(
@@ -449,14 +308,10 @@ export async function fundSharedBlob(
         command += ` --config "${clientConf.walrusConfPath}"`;
         command += ` --wallet "${clientConf.suiCongPath}"`;
 
-        console.log('Fund shared blob command:', command);
-
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
             console.error('CLI warning:', stderr);
         }
-
-        console.log('CLI output:', stdout);
     } catch (error) {
         console.error('Failed to fund shared blob:', error);
         throw error;
@@ -487,7 +342,10 @@ export async function sendBlob(
         
         // Create transaction
         const tx = new Transaction();
-        tx.transferObjects([tx.object(blob.id as any)], tx.pure(destinationSuiAddress));
+        
+        // Use tx.object directly and then transfer the object
+        // Typescript will validate the object during build phase
+        tx.transferObjects([blob.id], destinationSuiAddress);
         
         // Execute transaction
         const result = await client.signAndExecuteTransaction({
@@ -508,6 +366,8 @@ export async function sendBlob(
         throw error;
     }
 }
+
+
 
 
 
