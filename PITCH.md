@@ -10,6 +10,14 @@
   </tr>
 </table>
 
+## 📑 Contents
+
+- [Key Features](#-key-features)
+- [Extended Use Cases](#-extended-use-cases)
+- [Tech Stack](#️-tech-stack)
+- [Get Started](#-get-started)
+- [Roadmap / TODO](#️-roadmap--todo)
+
 ---
 
 ## 🚀 Key Features
@@ -105,7 +113,7 @@ Stay tuned – full instructions, bot access, and deployment details coming soon
   Simplify wallet interactions from within Telegram.
 
 - [ ] **Audit Log for File Actions**  
-  Display a private activity history for each user’s files.
+  Display a private activity history for each user's files.
 
 - [ ] **Timelock Encryption Support**  
   Use [HexCapsule](https://www.hexcapsule.com/about) protocol for data to be encrypted in such a way that it can only be decrypted after a specified period has elapsed. This method ensures that the encrypted information remains inaccessible until the predetermined time has passed, regardless of who possesses the encrypted data.
