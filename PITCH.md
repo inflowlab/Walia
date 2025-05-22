@@ -17,6 +17,7 @@
 - [Tech Stack](#️-tech-stack)
 - [Get Started](#-get-started)
 - [Roadmap / TODO](#️-roadmap--todo)
+- [Contact the team](#-contact-us)
 
 ---
 
@@ -126,3 +127,9 @@ Stay tuned – full instructions, bot access, and deployment details coming soon
 
 - [ ] **WaliaToken Ecosystem Integration**  
   Use **WaliaToken** to pay for services, receive rewards, and enable premium features within the platform.
+
+## 📬 Contact Us
+Have questions or want to collaborate?
+
+Team Name: **GanAIWeb3Club**   
+Email: Tiunow@gmail.com, skrypnychenkoandrii808@gmail.com, cryptospecura@gmail.com, grossbel13@gmail.com.
