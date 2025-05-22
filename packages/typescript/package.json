@@ -1,7 +1,7 @@
 {
   "name": "Walia",
   "version": "1.0.0",
-  "description": "A TypeScript project",
+  "description": "SUI Walrus Seal",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",

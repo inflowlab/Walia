@@ -1,10 +1,3 @@
-import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
-import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
-import { burnBlobs, list_blobs, read, store } from "./storage";
-import { ClientConfig } from "./wallet-management";
-import { WalrusCostEstimator } from "./walrus-cost-estimator";
-import { WalrusCostEstimator } from "./walrus-cost-estimator";
-
 # Walia TypeScript Component
 
 This package contains the TypeScript implementation of wallet management, storage, and utility functionality for the Walia project.

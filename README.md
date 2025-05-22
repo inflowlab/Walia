@@ -11,6 +11,7 @@ walia/
 ├── packages/
 │   ├── typescript/  # TypeScript component for wallet management and storage
 │   └── move/        # Move smart contracts
+│       └── walia_seal/  # Seal-based whitelist and capability contracts
 └── README.md
 ```
 
@@ -31,7 +32,9 @@ The Move component provides:
 
 - Smart contracts for the Walia project
 - WaliaToken implementation
-- Token and asset management
+- Whitelist capabilities for access control
+- WaliaObjCap for capability-based blob access in Walrus
+- Key-based ownership and access management
 
 ## Installation
 
@@ -79,6 +82,8 @@ See the [TypeScript package README](./packages/typescript/README.md) for detaile
 The Move smart contracts implement the following functionality:
 
 - WaliaToken: A custom token for the Walia project
+- Whitelist: Access control mechanism based on MystenLabs/seal
+- WaliaObjCap: A capability that links to Walrus blobs with key-based access control
 - Token creation and management
 - Balance tracking and management
 
