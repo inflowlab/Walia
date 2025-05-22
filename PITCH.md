@@ -15,6 +15,7 @@
 - [Key Features](#-key-features)
 - [Extended Use Cases](#-extended-use-cases)
 - [Tech Stack](#️-tech-stack)
+- [How It Works](#-how-it-works)
 - [Get Started](#-get-started)
 - [Roadmap / TODO](#️-roadmap--todo)
 - [Contact the team](#-contact-us)
@@ -186,7 +187,7 @@ sequenceDiagram
 
 Stay tuned – full instructions, bot access, and deployment details coming soon!
 
-📁 GitHub: [github.com/your-repo-link](#)  
+📁 GitHub: [https://github.com/GanAIWeb3Club/Walia](#)  
 ✈️ Telegram Bot: @WaliaBot (launching soon)
 
 ---
