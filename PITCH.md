@@ -87,6 +87,101 @@ Back up essential personal files with encryption and ownership control.
 
 ---
 
+## 🔄 How It Works
+
+### File Upload Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Telegram
+    participant Walia
+    participant Seal
+    participant Walrus
+    participant SUI
+
+    User->>Telegram: Upload file
+    Telegram->>Walia: Forward file
+    Walia->>Seal: Request encryption
+    Seal-->>Walia: Return encrypted file
+    Walia->>SUI: Calculate storage cost
+    SUI-->>Walia: Return cost estimate
+    Walia->>Telegram: Show cost to user
+    User->>Telegram: Confirm payment
+    Telegram->>SUI: Process payment
+    Walia->>Walrus: Store encrypted file
+    Walrus-->>Walia: Return blob ID
+    Walia->>SUI: Record ownership
+    Walia->>Telegram: Confirm storage
+    Telegram-->>User: Show success message
+```
+
+### File Access Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant Telegram
+    participant Walia
+    participant Seal
+    participant Walrus
+    participant SUI
+
+    User->>Telegram: Request file access
+    Telegram->>Walia: Forward request
+    Walia->>SUI: Verify ownership
+    SUI-->>Walia: Confirm ownership
+    Walia->>Walrus: Request file
+    Walrus-->>Walia: Return encrypted file
+    Walia->>Seal: Request decryption
+    Seal-->>Walia: Return decrypted file
+    Walia->>Telegram: Send file
+    Telegram-->>User: Deliver file
+```
+
+### File Transfer Flow
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant NewOwner
+    participant Telegram
+    participant Walia
+    participant SUI
+
+    Owner->>Telegram: Initiate transfer
+    Telegram->>Walia: Forward request
+    Walia->>SUI: Verify ownership
+    SUI-->>Walia: Confirm ownership
+    Walia->>SUI: Transfer ownership
+    SUI-->>Walia: Confirm transfer
+    Walia->>Telegram: Notify new owner
+    Telegram-->>NewOwner: Send notification
+```
+
+### File Expiration Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant Telegram
+    participant Walia
+    participant SUI
+    participant Walrus
+
+    Walia->>SUI: Check file status
+    SUI-->>Walia: Return expiration info
+    Walia->>Telegram: Send expiration warning
+    Telegram-->>User: Show warning
+    alt User chooses to renew
+        User->>Telegram: Confirm renewal
+        Telegram->>SUI: Process payment
+        Walia->>SUI: Update expiration
+    else User chooses to let expire
+        Walia->>Walrus: Delete file
+        Walia->>SUI: Update status
+    end
+```
+
+---
+
 ## 📌 Get Started
 
 Stay tuned – full instructions, bot access, and deployment details coming soon!
