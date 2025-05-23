@@ -173,3 +173,4 @@ test-wallets/
 test-wallets-advanced/
 *wallet*/
 *keystore*/ 
+packages/typescript/*.key
