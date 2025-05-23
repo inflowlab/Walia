@@ -16,7 +16,8 @@
 ///
 module walia_seal::whitelist;
 
-use sui::table;
+use sui::table::{Self, Table};
+use sui::vec_set::{Self, VecSet};
 
 const ENoAccess: u64 = 1;
 const EInvalidCap: u64 = 2;
@@ -24,8 +25,9 @@ const EDuplicate: u64 = 3;
 const ENotInWhitelist: u64 = 4;
 
 public struct Whitelist has key {
-    id: UID,
-    addresses: table::Table<address, bool>,
+        id: UID,
+        addresses: Table<address, bool>,
+        address_keys: VecSet<address>, // Tracks addresses for iteration
 }
 
 public struct Cap has key, store {
@@ -49,6 +51,7 @@ public fun create_whitelist(ctx: &mut TxContext): (Cap, Whitelist) {
     let wl = Whitelist {
         id: object::new(ctx),
         addresses: table::new(ctx),
+        address_keys: vec_set::empty(),
     };
     let cap = Cap {
         id: object::new(ctx),
@@ -77,12 +80,32 @@ public fun add(wl: &mut Whitelist, cap: &Cap, account: address) {
     assert!(cap.wl_id == object::id(wl), EInvalidCap);
     assert!(!wl.addresses.contains(account), EDuplicate);
     wl.addresses.add(account, true);
+    vec_set::insert(&mut wl.address_keys, account);
 }
 
 public fun remove(wl: &mut Whitelist, cap: &Cap, account: address) {
     assert!(cap.wl_id == object::id(wl), EInvalidCap);
     assert!(wl.addresses.contains(account), ENotInWhitelist);
     wl.addresses.remove(account);
+    vec_set::remove(&mut wl.address_keys, &account);
+}
+
+// Getter to return all addresses in the Whitelist
+public fun get_addresses(wl: &Whitelist): vector<address> {
+    vec_set::into_keys(wl.address_keys)
+}
+
+// Burn a Cap object
+public fun burn_cap(cap: Cap) {
+    let Cap { id, wl_id: _ } = cap;
+    object::delete(id);
+}
+
+// Burn a WaliaObjCap object (also burns the embedded Cap)
+public fun burn_walia_obj_cap(walia_obj_cap: WaliaObjCap) {
+    let WaliaObjCap { id, cap, walrus_obj_id: _ } = walia_obj_cap;
+    burn_cap(cap); // Burn the embedded Cap
+    object::delete(id); // Burn the WaliaObjCap
 }
 
 //////////////////////////////////////////////////////////
@@ -115,7 +138,7 @@ entry fun seal_approve(id: vector<u8>, wl: &Whitelist, ctx: &TxContext) {
 
 #[test_only]
 public fun destroy_for_testing(wl: Whitelist, cap: Cap) {
-    let Whitelist { id, addresses } = wl;
+    let Whitelist { id, addresses, .. } = wl;
     addresses.drop();
     object::delete(id);
     let Cap { id, .. } = cap;

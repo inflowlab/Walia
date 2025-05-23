@@ -43,6 +43,7 @@ export class WalletManagement {
   private baseDir: string;
   private activeEnv: EnvironmentType;
   private walletInfo: WalletInfo | null = null;
+  private suiClient: SuiClient;
 
   /**
    * Creates a new WalletManagement instance
@@ -57,6 +58,7 @@ export class WalletManagement {
     this.userName = userName;
     this.baseDir = baseDir;
     this.activeEnv = activeEnv;
+    this.suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
 
     // Check if wallet exists
     const userDir = path.join(this.baseDir, this.userName);
@@ -118,6 +120,8 @@ export class WalletManagement {
     updateSuiConfig(this.userName, updates, this.baseDir);
     if (updates.activeEnv) {
       this.activeEnv = updates.activeEnv;
+      // Update the suiClient to point to the new environment
+      this.suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
     }
   }
 
@@ -131,6 +135,8 @@ export class WalletManagement {
     updateWalrusConfig(this.userName, updates, this.baseDir);
     if (updates.defaultContext) {
       this.activeEnv = updates.defaultContext;
+      // Update the suiClient to point to the new environment
+      this.suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
     }
   }
 
@@ -140,6 +146,15 @@ export class WalletManagement {
   setActiveEnvironment(activeEnv: EnvironmentType): void {
     setActiveEnvironment(this.userName, activeEnv, this.baseDir);
     this.activeEnv = activeEnv;
+    // Update the suiClient to point to the new environment
+    this.suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
+  }
+
+  /**
+   * Updates the suiClient to point to a new environment
+   */
+  private updateSuiClient(): void {
+    this.suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
   }
 
   /**
@@ -149,11 +164,8 @@ export class WalletManagement {
     const walletInfo = await this.ensureWallet();
     
     try {
-      // Create a SuiClient pointing to the active network
-      const suiClient = new SuiClient({ url: getFullnodeUrl(this.activeEnv) });
-      
-      // Get SUI balance
-      const suiBalance = await suiClient.getBalance({
+      // Use the instance's suiClient instead of creating a new one
+      const suiBalance = await this.suiClient.getBalance({
         owner: walletInfo.address,
       });
       
@@ -316,6 +328,28 @@ export class WalletManagement {
   readSuiKeypair(): SuiKeypairInfo {
     const suiConfigPath = path.join(this.getWalletDirectory(), 'sui_client.yaml');
     return readSuiKeypair(suiConfigPath);
+  }
+
+  /**
+   * Gets the Ed25519 keypair for this wallet
+   * @returns The Ed25519 keypair
+   */
+  getKeypair(): Ed25519Keypair {
+    return this.readSuiKeypair().keypair;
+  }
+
+  /**
+   * Gets the suiClient instance
+   */
+  getSuiClient(): SuiClient {
+    return this.suiClient;
+  }
+
+  /**
+   * Gets the current active environment
+   */
+  getActiveEnvironment(): EnvironmentType {
+    return this.activeEnv;
   }
 }
 

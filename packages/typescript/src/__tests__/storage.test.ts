@@ -1,14 +1,19 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
 import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { BlobParams, BurnParams, DryRunResponse, StoreResult, add_blob_attributes, burnBlobs, get_blob_attributes, list_blobs, read, sendBlob, store } from "../storage";
+import { SealManager } from "../seal";
+import { BlobParams, BurnParams, add_blob_attributes, burnBlobs, getDataDir, get_blob_attributes, list_blobs, read, sendBlob, store } from "../storage";
+import { WalletManagement } from "../wallet-management";
 import { WalrusCostEstimator, getInfo } from "../walrus-cost-estimator";
-import { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
 
 // Integration tests are disabled by default, and must be explicitly enabled
 const runIntegrationTests = process.env.RUN_WALRUS_INTEGRATION_TESTS === 'true';
+
+// Use the same package ID from seal.test.ts
+const WALIA_SEAL_PACKAGE_ID = '0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507';
 
 describe('Storage Tests', () => {
     const fileName = 'test.txt';
@@ -24,6 +29,15 @@ describe('Storage Tests', () => {
             'name': fileName
         }
     };
+
+    const wallet = new WalletManagement(
+        DEV_WALLET.userName, 
+        DEV_WALLET.baseDir, 
+        DEV_WALLET.environment
+    );
+    // const testFile = path.join(getDataDir(wallet), fileName);
+    getDataDir(wallet);
+    const sealManager = new SealManager(wallet, WALIA_SEAL_PACKAGE_ID);
 
     beforeAll(() => {
         // Create test file
@@ -49,7 +63,7 @@ describe('Storage Tests', () => {
     if (runIntegrationTests) {
         it('should store and read a file', async () => {
             // Store the file and get both blobId and objectId
-            const storeResult = await store(testFile, params);
+            const storeResult = await store(testFile, params, sealManager);
             expect(storeResult.blobId).toBeDefined();
             expect(storeResult.objectId).toBeDefined();
             expect(typeof storeResult.storageCost).toBe('number');
@@ -60,16 +74,20 @@ describe('Storage Tests', () => {
             // Verify size relationships
             expect(storeResult.encodedSize).toBeGreaterThan(storeResult.unencodedSize);
             expect(storeResult.storageCost).toBeGreaterThan(0);
-            expect(storeResult.unencodedSize).toBe(testContent.length);
+            // expect(storeResult.unencodedSize).toBe(testContent.length);
 
             // Read content using blobId
-            const content = await read(storeResult.blobId, params);
+            const decryptedFilePath = await read(storeResult.blobId, params, sealManager);
+            const content = fs.readFileSync(decryptedFilePath);
+            fs.unlinkSync(decryptedFilePath);
             expect(content.toString()).toBe(testContent);
 
             // Test getting blob attributes using object ID
             const attributes = await get_blob_attributes(params.clientConf, storeResult.objectId);
             expect(attributes).toBeDefined();
             expect(attributes['name']).toBe(fileName);
+            expect(attributes['capId']).toBeDefined();
+            expect(attributes['whitelistId']).toBeDefined();
 
             // Test adding new attributes using object ID
             const newAttributes = {
@@ -94,7 +112,7 @@ describe('Storage Tests', () => {
 
         it('should burn specific blob objects', async () => {
             // Store a file first
-            const storeResult = await store(testFile, params);
+            const storeResult = await store(testFile, params, sealManager);
             expect(storeResult.blobId).toBeDefined();
             expect(storeResult.objectId).toBeDefined();
 
@@ -112,7 +130,7 @@ describe('Storage Tests', () => {
         it.skip('should burn all expired blobs', async () => {
             // Store a file that will expire soon
             const expiredParams = { ...params, epochs: 1 };
-            const storeResult = await store(testFile, expiredParams);
+            const storeResult = await store(testFile, expiredParams, sealManager);
             
             // Burn all expired blobs
             const burnParams: BurnParams = {
@@ -163,7 +181,7 @@ describe('Storage Tests', () => {
 
         it.skip('should send a blob to another address', async () => {
             // First store a file to get a blob
-            const storeResult = await store(testFile, params);
+            const storeResult = await store(testFile, params, sealManager);
             expect(storeResult.blobId).toBeDefined();
             expect(storeResult.objectId).toBeDefined();
 

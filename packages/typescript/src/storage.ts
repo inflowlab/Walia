@@ -2,15 +2,16 @@ import * as fs from "fs";
 import * as path from "path";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { Inputs } from "@mysten/sui/transactions";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { ClientConfig, readSuiKeypair } from "./wallet-management";
-import { WalrusCostEstimator } from "./walrus-cost-estimator";
+import { SealManager } from "./seal";
+import { ClientConfig, WalletManagement, readSuiKeypair } from "./wallet-management";
 
 const execAsync = promisify(exec);
 
 const WAL_TO_FROST = 1_000_000_000; // 1 WAL = 1,000,000,000 FROST
+
+const DATA_DIR = 'data';
 
 export interface BlobAttributes {
     [key: string]: string;
@@ -74,9 +75,39 @@ export interface StoreResult {
     encodingType: string;
 }
 
-export async function store(filePath: string, params: BlobParams): Promise<StoreResult> {
+export function getDataDir(walletManagement: WalletManagement): string {
+    const dataDir = path.join(walletManagement.getWalletDirectory(), DATA_DIR);
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir);
+    }
+    return dataDir;
+}
+
+// remove files after storing
+async function removeFiles(filePath: string, encodedFilePath: string): Promise<void> {
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+    if (fs.existsSync(encodedFilePath)) {
+        fs.unlinkSync(encodedFilePath);
+    }
+}
+
+export async function store(filePath: string, params: BlobParams, sealManager: SealManager): Promise<StoreResult> {
     try {
-        let command = `walrus store --json "${filePath}"`;
+
+        const encodedFileResult = await sealManager.encodeFile(filePath);
+        const encodedFilePath = encodedFileResult.encodedFilePath;
+        const capId = encodedFileResult.capId;
+        const whitelistId = encodedFileResult.whitelistId;
+        // Add seal management attributes to track capId and whitelistId
+        if (!params.attributes) {
+            params.attributes = {};
+        }
+        params.attributes.capId = capId;
+        params.attributes.whitelistId = whitelistId;
+
+        let command = `walrus store --json "${encodedFilePath}"`;
         
         if (params.epochs) {
             command += ` --epochs ${params.epochs}`;
@@ -125,6 +156,9 @@ export async function store(filePath: string, params: BlobParams): Promise<Store
                 await add_blob_attributes(params.clientConf, result.objectId, params.attributes);
             }
             
+            // remove files after storing
+            await removeFiles(filePath, encodedFilePath);
+            
             return result;
         } else if (storeResult?.alreadyCertified?.blobId) {
             // For already certified blobs, we need to get the additional info
@@ -143,8 +177,12 @@ export async function store(filePath: string, params: BlobParams): Promise<Store
                 await add_blob_attributes(params.clientConf, result.objectId, params.attributes);
             }
             
+            // remove files after storing
+            await removeFiles(filePath, encodedFilePath);
+            
             return result;
         } else {
+            await removeFiles(filePath, encodedFilePath);
             console.error('Unexpected response structure:', response);
             throw new Error('Failed to store file: Invalid response from Walrus CLI');
         }
@@ -154,9 +192,10 @@ export async function store(filePath: string, params: BlobParams): Promise<Store
     }
 }
 
-export async function read(blobId: string, params: BlobParams): Promise<Buffer> {
+
+export async function read(blobId: string, params: BlobParams, sealManager: SealManager): Promise<string> {
     try {
-        const outputPath = path.join(process.cwd(), `temp-${blobId}`);
+        const outputPath =  path.join(getDataDir(sealManager.getWallet()),  `${blobId}.enc`);
         let command = `walrus read --json "${blobId}" --out "${outputPath}"`;
 
         command += ` --config "${params.clientConf.walrusConfPath}"`;
@@ -167,10 +206,20 @@ export async function read(blobId: string, params: BlobParams): Promise<Buffer> 
             console.error('CLI warning:', stderr);
         }
 
-        const fileContent = fs.readFileSync(outputPath);
-        fs.unlinkSync(outputPath); // Clean up temporary file
+        const blobObjectId = await getBlobObjectIdByBlobId(blobId, params.clientConf);
+        if (!blobObjectId) {
+            throw new Error(`No blob object ID found for blob ID: ${blobId}`);
+        }
+
+        const attributes = await get_blob_attributes(params.clientConf, blobObjectId);
+        const capId = attributes.capId;
+        const whitelistId = attributes.whitelistId;
         
-        return fileContent;
+        // Decrypt the file data
+        const decryptedFilePath = await sealManager.decodeFile(outputPath, whitelistId);
+        fs.unlinkSync(outputPath);
+        
+        return decryptedFilePath;
     } catch (error) {
         console.error('Failed to read file:', error);
         throw error;
@@ -249,6 +298,30 @@ export async function list_blobs(clientConf: ClientConfig, includeExpired: boole
     }
 }
 
+/**
+ * Get blob object ID by blobId from list_blobs result
+ */
+export async function getBlobObjectIdByBlobId(blobId: string, clientConf: ClientConfig): Promise<string | null> {
+    try {
+        // List all blobs
+        const blobs = await list_blobs(clientConf, false);
+        
+        // Find the blob with matching blobId
+        const targetBlob = blobs.find(blob => blob.blobId === blobId);
+        
+        if (!targetBlob) {
+            console.log(`No blob found with blobId: ${blobId}`);
+            return null;
+        }
+
+        console.log(`Found blob object ID: ${targetBlob.id} for blobId: ${blobId}`);
+        return targetBlob.id;
+    } catch (error) {
+        console.error('Error getting blob object ID:', error);
+        return null;
+    }
+}
+
 export interface BurnParams {
     blobObjectIds?: string[];
     all_expired?: boolean;
@@ -284,15 +357,6 @@ export async function burnBlobs(clientConf: ClientConfig, params: BurnParams): P
         console.error('Failed to burn blobs:', error);
         throw error;
     }
-}
-
-export interface DryRunResponse {
-    path: string;
-    blobId: string;
-    unencodedSize: number;
-    encodedSize: number;
-    storageCost: number;
-    encodingType: string;
 }
 
 export async function fundSharedBlob(

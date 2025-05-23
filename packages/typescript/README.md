@@ -1,3 +1,6 @@
+import { SealConfig, SealManager, WalletManagement } from "@walia/typescript";
+import { SealConfig, SealManager, WalletManagement } from "@walia/typescript";
+
 # Walia TypeScript Component
 
 This package contains the TypeScript implementation of wallet management, storage, and utility functionality for the Walia project.
@@ -18,6 +21,7 @@ This package contains the TypeScript implementation of wallet management, storag
 - Single-user or all-users updating options
 - Storage management for Walrus
 - Cost estimation for Walrus storage
+- **NEW**: Seal-based encryption and decryption with threshold cryptography
 
 ## Installation
 
@@ -27,6 +31,88 @@ npm install
 ```
 
 ## Usage
+
+### Seal Manager - Encryption and Decryption
+
+The SealManager class provides integration with [MystenLabs Seal](https://github.com/MystenLabs/seal) for decentralized secrets management, following the official Seal SDK pattern:
+
+```typescript
+
+// Create wallet management instance
+const wallet = new WalletManagement('alice');
+
+// Configure Seal with your whitelist contract and key servers
+const sealConfig: SealConfig = {
+  whitelistPackageId: '0x...', // Your deployed whitelist contract
+  keyServerUrls: [
+    'https://keyserver1.example.com',
+    'https://keyserver2.example.com'
+  ],
+  threshold: 2, // Require 2 out of 2 key servers
+  network: 'testnet'
+};
+
+// Create SealManager instance
+const sealManager = new SealManager(wallet, sealConfig);
+
+// Encrypt sensitive data (automatically creates whitelist and Cap objects)
+const sensitiveData = "This is my secret message";
+
+const encryptedData = await sealManager.encrypt(sensitiveData, {
+  initialMembers: ['0x123...', '0x456...'] // Optional initial whitelist members
+});
+
+console.log('Encrypted data:', encryptedData);
+console.log('Whitelist ID:', encryptedData.whitelistObjectId);
+console.log('Cap ID:', encryptedData.capObjectId);
+
+// Decrypt the data (only if you're in the whitelist)
+const decryptedData = await sealManager.decrypt(encryptedData);
+console.log('Decrypted data:', decryptedData.toString());
+
+// Add more members to the whitelist (requires Cap ownership)
+await sealManager.addMembersToWhitelistViaCLI(
+  encryptedData.whitelistObjectId,
+  encryptedData.capObjectId,
+  ['0x789...']
+);
+
+// Create a WaliaObjCap for a Walrus blob
+const waliaObjCapId = await sealManager.createWaliaObjCap(
+  encryptedData.capObjectId,
+  'walrus_blob_id'
+);
+```
+
+#### Key Features of the Implementation
+
+Following the MystenLabs Seal SDK pattern, the SealManager:
+
+1. **Automatic Whitelist Creation**: Before encryption, it creates a whitelist object on-chain
+2. **Cap Object Management**: The Cap object is automatically added to your wallet for whitelist administration
+3. **Whitelist-Based Encryption**: Uses the whitelist address as the encryption ID
+4. **CLI Integration**: Uses Sui CLI for reliable on-chain operations
+5. **Threshold Decryption**: Supports configurable threshold key servers
+
+#### Implementation Flow
+
+```typescript
+// 1. Create whitelist and receive Cap (happens automatically during encrypt)
+const whitelistResult = await sealManager.createWhitelistWithCap(['0x123...']);
+
+// 2. Whitelist address is used as encryption ID
+const encryptionId = whitelistResult.whitelistId;
+
+// 3. Symmetric key encryption with whitelist context
+// 4. Threshold encryption of symmetric key
+// 5. Store key association linked to whitelist
+
+// For decryption:
+// 1. Verify access through whitelist contract
+// 2. Request key shares from threshold servers
+// 3. Reconstruct symmetric key
+// 4. Decrypt original data
+```
 
 ### Function-based approach
 
@@ -119,6 +205,23 @@ const estimator = new WalrusCostEstimator(clientConf);
 await estimator.initialize();
 const cost = await estimator.estimateStorageCost(fileSize, epochs);
 ```
+
+## Seal Integration Features
+
+The SealManager integrates with the Walia whitelist contract to provide:
+
+- **Threshold Encryption**: Uses multiple key servers for enhanced security
+- **Access Control**: Leverages on-chain whitelists for fine-grained permissions
+- **Walrus Integration**: Links encrypted data to Walrus blobs via WaliaObjCap
+- **Decentralized Key Management**: No single point of failure for key storage
+
+### Security Considerations
+
+- Always use HTTPS endpoints for key servers
+- Verify key server certificates in production
+- Use appropriate threshold values (recommend at least 2-out-of-3)
+- Store whitelist IDs securely
+- Monitor access patterns for suspicious activity
 
 ## Development Wallets for Testing
 

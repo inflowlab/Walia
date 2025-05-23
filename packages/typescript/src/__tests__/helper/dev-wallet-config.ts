@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ClientConfig } from "../../storage";
+import { ClientConfig } from "../../wallet-management";
 
 /**
  * Dev Wallet Configuration for Tests
