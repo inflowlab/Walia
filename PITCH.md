@@ -45,8 +45,8 @@
 - 🔥 **Burn & Refund**  
   Delete files early and receive a proportional refund based on unused storage time.
 
-- ⏰ **Expiration Notifications & Renewal Suggestions**  
-  **Walia** proactively notifies users when a file's storage is nearing expiration and offers a seamless option to extend the duration.
+- ⏰ **On-Demand Expiration Check & Renewal Suggestions**  
+  **Walia** performs a check on file expiration status only when prompted by the user, and suggests renewal options if any files are nearing the end of their storage period.
 
 ---
 
@@ -188,7 +188,9 @@ sequenceDiagram
 Stay tuned – full instructions, bot access, and deployment details coming soon!
 
 📁 GitHub: [https://github.com/GanAIWeb3Club/Walia](#)  
-✈️ Telegram Bot: @WaliaBot (launching soon)
+✈️ Telegram Bot: [@Walia_file_bot](https://t.me/Walia_file_bot)
+
+![walia-tg](pics/walia-tg.png)
 
 ---
 
