@@ -93,7 +93,7 @@ export class WalletManagement {
   /**
    * Gets user environment configuration files
    */
-  getUserEnvironment(): { suiConfig: string; walrusConfig: string } {
+  getUserEnvironment(): ClientConfig {
     return getUserEnvironment(this.userName, this.baseDir);
   }
 
@@ -578,7 +578,7 @@ export async function createWalletEnvironment(
 export function getUserEnvironment(
   userName: string, 
   baseDir = path.join(process.cwd(), 'wallets')
-): { suiConfig: string; walrusConfig: string } {
+): ClientConfig {
   const userDir = path.join(baseDir, userName);
   
   if (!fs.existsSync(userDir)) {
@@ -593,8 +593,8 @@ export function getUserEnvironment(
   }
   
   return {
-    suiConfig: suiConfigPath,
-    walrusConfig: walrusConfigPath
+    suiCongPath: suiConfigPath,
+    walrusConfPath: walrusConfigPath
   };
 }
 

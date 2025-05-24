@@ -179,7 +179,7 @@ describe('Storage Tests', () => {
         }, 60000);
 
 
-        it.skip('should send a blob to another address', async () => {
+        it('should send a blob to another address', async () => {
             // First store a file to get a blob
             const storeResult = await store(testFile, params, sealManager);
             expect(storeResult.blobId).toBeDefined();
@@ -191,13 +191,13 @@ describe('Storage Tests', () => {
             expect(blob).toBeDefined();
 
             // Test destination address (this should be a valid Sui address that you control for testing)
-            const destinationAddress = '0x6a0effbaa0556cd684ec4ec60617ebf9f39fd1b8152a41857bb2eb8f5bd137d0'; // Replace with a real test address
+            const destinationAddress = '0x5a95cc411d6aee68d60e77fad8e6ce7b0fabf02b7524a5f6a8aaa41797a5baa7'; // Replace with a real test address
 
             // Send the blob
             await expect(sendBlob(
-                params.clientConf,
-                blob!,
-                destinationAddress
+                storeResult.objectId,
+                destinationAddress,
+                sealManager
             )).resolves.not.toThrow();
 
             // Verify the blob is no longer in our list
@@ -205,8 +205,7 @@ describe('Storage Tests', () => {
             expect(blobsAfter.find(b => b.id === storeResult.objectId)).toBeUndefined();
 
             // Verify the destination address received the blob
-            const suiConfig = yaml.load(fs.readFileSync(params.clientConf.suiCongPath, 'utf8')) as any;
-            const client = new SuiClient({ url: getFullnodeUrl(suiConfig.active_env) });
+            const client = sealManager.getWallet().getSuiClient();
             
             const objectInfo = await client.getObject({
                 id: storeResult.objectId,

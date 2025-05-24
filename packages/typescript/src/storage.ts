@@ -383,37 +383,28 @@ export async function fundSharedBlob(
 }
 
 export async function sendBlob(
-    clientConf: ClientConfig,
-    blob: BlobObject,
-    destinationSuiAddress: string
+    blobObjId: string,
+    destinationSuiAddress: string,
+    sealManager: SealManager
 ): Promise<void> {
     try {
-        if (!blob.id) {
-            throw new Error('Blob ID is undefined');
-        }
-
-        // Initialize Sui client and load keypair
-        const { keypair, activeAddress, activeEnv } = readSuiKeypair(clientConf.suiCongPath);
-        
-        // Get fullnode URL based on environment
-        const fullnodeUrl = 
-            activeEnv === 'testnet' ? 'https://fullnode.testnet.sui.io:443' :
-            activeEnv === 'mainnet' ? 'https://fullnode.mainnet.sui.io:443' :
-            activeEnv === 'devnet' ? 'https://fullnode.devnet.sui.io:443' :
-            'http://127.0.0.1:9000'; // localnet
-        
-        const client = new SuiClient({ url: fullnodeUrl });
-        
         // Create transaction
         const tx = new Transaction();
         
+        const blobAttrs = await get_blob_attributes(sealManager.getWallet().getUserEnvironment(), blobObjId);
+        const capId = blobAttrs.capId;
+        const whitelistId = blobAttrs.whitelistId;
+
+        sealManager.addMembersToWhitelistViaCap(whitelistId, capId, [destinationSuiAddress]);
+        // Add 1 second delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 3000));
         // Use tx.object directly and then transfer the object
         // Typescript will validate the object during build phase
-        tx.transferObjects([blob.id], destinationSuiAddress);
+        tx.transferObjects([blobObjId, capId], destinationSuiAddress);
         
         // Execute transaction
-        const result = await client.signAndExecuteTransaction({
-            signer: keypair,
+        const result = await sealManager.getWallet().getSuiClient().signAndExecuteTransaction({
+            signer: sealManager.getWallet().getKeypair(),
             transaction: tx,
             options: {
                 showEffects: true,
