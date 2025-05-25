@@ -174,3 +174,5 @@ test-wallets-advanced/
 *wallet*/
 *keystore*/ 
 packages/typescript/*.key
+
+db.sqlite
