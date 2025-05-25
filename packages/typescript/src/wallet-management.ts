@@ -12,7 +12,7 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 export interface ClientConfig {
-  suiCongPath: string;
+  suiConfPath: string;
   walrusConfPath: string;
 }
 
@@ -485,8 +485,9 @@ export async function createWalletEnvironment(
     const keystorePath = path.join(userDir, 'sui.keystore');
     
     // Import the generated mnemonic into a keystore file using the correct format
-    // sui keytool import MNEMONIC SCHEME --keystore-path PATH --alias ALIAS
-    await execAsync(`sui keytool import "${mnemonic}" ed25519 --keystore-path ${keystorePath} --alias ${userName}`);
+    // Use a unique alias to avoid conflicts with global keystore
+    const uniqueAlias = `${userName}_${Date.now()}`;
+    await execAsync(`sui keytool --keystore-path "${keystorePath}" import "${mnemonic}" ed25519`);
     console.log(`Created keystore at: ${keystorePath}`);
     
     // Find and delete any .key files that were created during the keytool generate command
@@ -593,7 +594,7 @@ export function getUserEnvironment(
   }
   
   return {
-    suiCongPath: suiConfigPath,
+    suiConfPath: suiConfigPath,
     walrusConfPath: walrusConfigPath
   };
 }

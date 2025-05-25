@@ -80,7 +80,7 @@ export async function getInfo(clientConf: ClientConfig): Promise<WalrusInfo> {
         let command = `walrus info --json`;
         
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {

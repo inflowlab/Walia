@@ -181,8 +181,8 @@ describe('WalletManagement Class', () => {
       expect(env).toHaveProperty('walrusConfig');
       
       const userDir = wallet.getWalletDirectory();
-      expect(env.suiConfig).toBe(path.join(userDir, 'sui_client.yaml'));
-      expect(env.walrusConfig).toBe(path.join(userDir, 'walrus_client_config.yaml'));
+      expect(env.suiConfPath).toBe(path.join(userDir, 'sui_client.yaml'));
+      expect(env.walrusConfPath).toBe(path.join(userDir, 'walrus_client_config.yaml'));
     });
   });
   

@@ -187,8 +187,8 @@ describe('Wallet Management Module', () => {
       expect(env).toHaveProperty('suiConfig');
       expect(env).toHaveProperty('walrusConfig');
       
-      expect(env.suiConfig).toBe(path.join(TEST_DIR, userName, 'sui_client.yaml'));
-      expect(env.walrusConfig).toBe(path.join(TEST_DIR, userName, 'walrus_client_config.yaml'));
+      expect(env.suiConfPath).toBe(path.join(TEST_DIR, userName, 'sui_client.yaml'));
+      expect(env.walrusConfPath).toBe(path.join(TEST_DIR, userName, 'walrus_client_config.yaml'));
     });
     
     it('should throw error if user directory does not exist', () => {

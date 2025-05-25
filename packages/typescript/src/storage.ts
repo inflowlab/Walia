@@ -40,6 +40,16 @@ export interface BlobObject {
     certifiedEpoch: number;
     storage: StorageObject;
     deletable: boolean;
+    name?: string;
+    whitelistId?: string;
+    endEpoch?: number;
+    endDate?: string;
+    // Additional enriched fields
+    timestamp?: string;
+    formattedSize?: string;
+    isExpired?: boolean;
+    daysUntilExpiry?: number;
+    attributes?: BlobAttributes;
 }
 
 interface WalrusStoreResponse {
@@ -117,7 +127,7 @@ export async function store(filePath: string, params: BlobParams, sealManager: S
         }
         
         command += ` --config "${params.clientConf.walrusConfPath}"`;
-        command += ` --wallet "${params.clientConf.suiCongPath}"`;
+        command += ` --wallet "${params.clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
@@ -199,7 +209,7 @@ export async function read(blobId: string, params: BlobParams, sealManager: Seal
         let command = `walrus read --json "${blobId}" --out "${outputPath}"`;
 
         command += ` --config "${params.clientConf.walrusConfPath}"`;
-        command += ` --wallet "${params.clientConf.suiCongPath}"`;
+        command += ` --wallet "${params.clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
@@ -236,7 +246,7 @@ export async function add_blob_attributes(clientConf: ClientConfig, blobObjectId
         }
 
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
@@ -253,7 +263,7 @@ export async function get_blob_attributes(clientConf: ClientConfig, blobObjectId
         let command = `walrus get-blob-attribute "${blobObjectId}" --json`;
         
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
@@ -283,7 +293,7 @@ export async function list_blobs(clientConf: ClientConfig, includeExpired: boole
         }
 
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {
@@ -291,11 +301,72 @@ export async function list_blobs(clientConf: ClientConfig, includeExpired: boole
         }
 
         const response = JSON.parse(stdout);
-        return response || [];
+        const blobs: BlobObject[] = response || [];
+        
+        // Enrich each blob with additional computed fields
+        const enrichedBlobs = await Promise.all(blobs.map(async (blob) => {
+            // Format size in human readable format
+            blob.formattedSize = formatBytes(blob.size);
+            
+            // Create timestamp from registered epoch
+            blob.timestamp = `Epoch ${blob.registeredEpoch}`;
+            
+            // Calculate expiry information if storage info is available
+            if (blob.storage?.endEpoch) {
+                blob.endEpoch = blob.storage.endEpoch;
+                // Assume each epoch is ~24 hours (this is approximate)
+                const epochsUntilExpiry = blob.storage.endEpoch - blob.registeredEpoch;
+                blob.daysUntilExpiry = Math.max(0, epochsUntilExpiry);
+                blob.isExpired = epochsUntilExpiry <= 0;
+                
+                // Create human readable end date (approximate)
+                const now = new Date();
+                const expiryDate = new Date(now.getTime() + (epochsUntilExpiry * 24 * 60 * 60 * 1000));
+                blob.endDate = blob.isExpired ? 'Expired' : expiryDate.toISOString().split('T')[0];
+            } else {
+                blob.isExpired = false;
+                blob.daysUntilExpiry = undefined;
+                blob.endDate = 'Unknown';
+            }
+            
+            // Try to get blob attributes (non-blocking, don't fail if it errors)
+            try {
+                blob.attributes = await get_blob_attributes(clientConf, blob.id);
+                
+                // Extract name from attributes if available
+                if (blob.attributes?.name) {
+                    blob.name = blob.attributes.name;
+                }
+                
+                // Extract whitelistId from attributes if available
+                if (blob.attributes?.whitelistId) {
+                    blob.whitelistId = blob.attributes.whitelistId;
+                }
+            } catch (error) {
+                // Don't fail the entire operation if attributes can't be fetched
+                console.debug(`Could not fetch attributes for blob ${blob.id}:`, error);
+                blob.attributes = {};
+            }
+            
+            return blob;
+        }));
+        
+        return enrichedBlobs;
     } catch (error) {
         console.error('Failed to list blobs:', error);
         throw error;
     }
+}
+
+// Helper function to format bytes in human readable format
+function formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 Bytes";
+    
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 /**
@@ -333,7 +404,7 @@ export async function burnBlobs(clientConf: ClientConfig, params: BurnParams): P
         let command = 'walrus burn-blobs --yes';
 
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
         
         // Priority handling:
         // 1. blobObjectIds if not empty
@@ -370,7 +441,7 @@ export async function fundSharedBlob(
         let command = `walrus fund-shared-blob "${storage.id}" --json`;
         command += ` --amount ${amountFROST}`;
         command += ` --config "${clientConf.walrusConfPath}"`;
-        command += ` --wallet "${clientConf.suiCongPath}"`;
+        command += ` --wallet "${clientConf.suiConfPath}"`;
 
         const { stdout, stderr } = await execAsync(command);
         if (stderr) {

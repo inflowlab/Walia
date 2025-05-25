@@ -41,7 +41,7 @@ try {
 
 // Create client config for storage operations
 export const DEV_CLIENT_CONFIG: ClientConfig = {
-  suiCongPath: path.join(DEV_WALLET.baseDir, DEV_WALLET.userName, 'sui_client.yaml'),
+  suiConfPath: path.join(DEV_WALLET.baseDir, DEV_WALLET.userName, 'sui_client.yaml'),
   walrusConfPath: path.join(DEV_WALLET.baseDir, DEV_WALLET.userName, 'walrus_client_config.yaml')
 };
 

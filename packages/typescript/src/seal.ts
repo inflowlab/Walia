@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromHex } from "@mysten/sui/utils";
 import { WalletManagement } from "./wallet-management";
@@ -101,7 +102,6 @@ export class SealManager {
   async encodeFile(filePath: string): Promise<EncodedFileResult> {
     try {
       // Read the file
-      const fs = require('fs');
       const fileData = fs.readFileSync(filePath);
       
       // Create whitelist and cap
@@ -141,7 +141,6 @@ export class SealManager {
 
   async decodeFile(filePath: string, whitelistId: string): Promise<string> {
     try {
-      const fs = require('fs');
       const fileData = fs.readFileSync(filePath);
       
       const encryptedData = await this.decrypt(fileData, whitelistId);
