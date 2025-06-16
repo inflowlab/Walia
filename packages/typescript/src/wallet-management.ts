@@ -487,7 +487,7 @@ export async function createWalletEnvironment(
     // Import the generated mnemonic into a keystore file using the correct format
     // Use a unique alias to avoid conflicts with global keystore
     const uniqueAlias = `${userName}_${Date.now()}`;
-    await execAsync(`sui keytool --keystore-path "${keystorePath}" import "${mnemonic}" ed25519`);
+    await execAsync(`sui keytool --keystore-path "${keystorePath}" import "${mnemonic}" ed25519 --alias "${uniqueAlias}"`);
     console.log(`Created keystore at: ${keystorePath}`);
     
     // Find and delete any .key files that were created during the keytool generate command

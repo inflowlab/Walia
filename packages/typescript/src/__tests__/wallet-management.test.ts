@@ -43,7 +43,7 @@ vi.mock('child_process', () => ({
       fs.writeFileSync(`${MOCK_ADDRESS}.key`, 'mock key file content');
     } 
     // Handle the keytool import command with the new format
-    else if (cmd.match(/^sui keytool import ".*" ed25519 --keystore-path .*\/sui\.keystore --alias .*/)) {
+    else if (cmd.match(/^sui keytool import --keystore-path .* ".*" ed25519 --alias .*/)) {
       callback(null, { stdout: 'Keypair imported successfully', stderr: '' });
     } 
     else {
@@ -184,8 +184,8 @@ describe('Wallet Management Module', () => {
       const env = getUserEnvironment(userName, TEST_DIR);
       
       // Check if it returns the correct paths
-      expect(env).toHaveProperty('suiConfig');
-      expect(env).toHaveProperty('walrusConfig');
+      expect(env).toHaveProperty('suiConfPath');
+      expect(env).toHaveProperty('walrusConfPath');
       
       expect(env.suiConfPath).toBe(path.join(TEST_DIR, userName, 'sui_client.yaml'));
       expect(env.walrusConfPath).toBe(path.join(TEST_DIR, userName, 'walrus_client_config.yaml'));
