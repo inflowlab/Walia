@@ -6,7 +6,7 @@ import { WalletManagement } from "../wallet-management";
 
 // Test configuration using the provided package ID
 // const WALIA_SEAL_PACKAGE_ID = '0xa34c6b853c9d90b8fa674d0c0a2b00052c13da1e520de3d15481d0ad7a5b894d';
-const WALIA_SEAL_PACKAGE_ID = '0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507';
+const WALIA_SEAL_PACKAGE_ID = '0x271cba067da069738b4bd2d1b2e49789c08845c637704f4de169cb48f0bf01a0';
 
 describe('SealManager createWhitelistWithCap Integration Test', () => {
   beforeAll(async () => {});
@@ -41,7 +41,7 @@ describe('SealManager createWhitelistWithCap Integration Test', () => {
 
     const whitelistResult = {
         whitelistId: '0x8d0b99b608ffcc188b090fa8d36651c25dc67b6ee796a05fb419988d547c1d90',
-        capId: '0x19560a7a5d13fbc0eaddf46b2a6cc0b8c9258a7234d80443ac3f6ad2d2d97e79',
+        capId: '0xe52b085f66280d42e30ae429c7ded0394fbf7122d05a447116812b5ab3632983',
     };
 
     // Test createWhitelistWithCap with real wallet integration
@@ -64,7 +64,7 @@ describe('SealManager createWhitelistWithCap Integration Test', () => {
 
     const whitelistResult = {
       whitelistId: '0x8d0b99b608ffcc188b090fa8d36651c25dc67b6ee796a05fb419988d547c1d90',
-      capId: '0x19560a7a5d13fbc0eaddf46b2a6cc0b8c9258a7234d80443ac3f6ad2d2d97e79',
+      capId: '0xe52b085f66280d42e30ae429c7ded0394fbf7122d05a447116812b5ab3632983',
   };
 
     await sealManager.addMembersToWhitelistViaCap(
@@ -94,7 +94,7 @@ describe('SealManager createWhitelistWithCap Integration Test', () => {
 
     const whitelistResult = {
       whitelistId: '0x8d0b99b608ffcc188b090fa8d36651c25dc67b6ee796a05fb419988d547c1d90',
-      capId: '0x19560a7a5d13fbc0eaddf46b2a6cc0b8c9258a7234d80443ac3f6ad2d2d97e79',
+      capId: '0xe52b085f66280d42e30ae429c7ded0394fbf7122d05a447116812b5ab3632983',
     };
     await sealManager.addMembersToWhitelistViaCap(
         whitelistResult.whitelistId,
@@ -115,7 +115,7 @@ describe('SealManager createWhitelistWithCap Integration Test', () => {
 
     const whitelistResult = {
       whitelistId: '0x8d0b99b608ffcc188b090fa8d36651c25dc67b6ee796a05fb419988d547c1d90',
-      capId: '0x19560a7a5d13fbc0eaddf46b2a6cc0b8c9258a7234d80443ac3f6ad2d2d97e79',
+      capId: '0xe52b085f66280d42e30ae429c7ded0394fbf7122d05a447116812b5ab3632983',
   };
 
     const entries = await sealManager.getWhitelistEntries(whitelistResult.whitelistId);

@@ -43,7 +43,7 @@ vi.mock('child_process', () => ({
       fs.writeFileSync(`${MOCK_ADDRESS}.key`, 'mock key file content');
     } 
     // Handle the keytool import command with the new format
-    else if (cmd.match(/^sui keytool import --keystore-path .* ".*" ed25519 --alias .*/)) {
+    else if (cmd.match(/^sui keytool --keystore-path .* import ".*" ed25519 --alias .*/)) {
       callback(null, { stdout: 'Keypair imported successfully', stderr: '' });
     } 
     else {

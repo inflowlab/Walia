@@ -69,9 +69,22 @@ export class SealManager {
 
   constructor(wallet: WalletManagement, waliaSealPackageId: string) {
     this.wallet = wallet;
+    
+    // Get the network and key servers with fallback
+    const network = this.mapEnvironmentToNetwork(wallet.getActiveEnvironment());
+    const keyServers = getAllowlistedKeyServers(network);
+    
+    // Debug logging
+    console.log(`SealManager: network=${network}, keyServers=`, keyServers);
+    
+    // Handle the case where keyServers might be undefined or empty
+    const serverConfigs = keyServers && keyServers.length > 0 
+      ? keyServers.map((id) => ({ objectId: id, weight: 1 }))
+      : []; // Use empty array as fallback
+    
     this.sealClient = new SealClient({
       suiClient: this.wallet.getSuiClient(),
-      serverObjectIds: getAllowlistedKeyServers(this.mapEnvironmentToNetwork(wallet.getActiveEnvironment())).map((id) => [id, 1]),
+      serverConfigs,
       verifyKeyServers: false,
     });
     this.waliaSealPackageId = waliaSealPackageId;
@@ -192,6 +205,7 @@ async encrypt(data: string | Buffer,
 			packageId: this.waliaSealPackageId,
 			ttlMin: 10,
 			signer: this.wallet.getKeypair(),
+			suiClient: this.wallet.getSuiClient(),
 		});
 
         const decryptedBytes = await this.sealClient.decrypt({

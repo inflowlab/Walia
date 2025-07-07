@@ -3,7 +3,7 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 import DEV_WALLET, { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
 import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { SealManager } from "../seal";
 import { BlobParams, BurnParams, add_blob_attributes, burnBlobs, getDataDir, get_blob_attributes, list_blobs, read, sendBlob, store } from "../storage";
 import { WalletManagement } from "../wallet-management";
@@ -48,6 +48,13 @@ describe('Storage Tests', () => {
         // Clean up test file
         if (fs.existsSync(testFile)) {
             fs.unlinkSync(testFile);
+        }
+    });
+
+    // Ensure test file exists before each test
+    beforeEach(() => {
+        if (!fs.existsSync(testFile)) {
+            fs.writeFileSync(testFile, testContent);
         }
     });
 
@@ -116,15 +123,25 @@ describe('Storage Tests', () => {
             expect(storeResult.blobId).toBeDefined();
             expect(storeResult.objectId).toBeDefined();
 
+            // Get initial blob count and verify our blob exists
+            const initialBlobs = await list_blobs(params.clientConf);
+            const initialCount = initialBlobs.length;
+            const ourBlob = initialBlobs.find(b => b.id === storeResult.objectId);
+            expect(ourBlob).toBeDefined();
+
             // Burn the specific blob object
             const burnParams: BurnParams = {
                 blobObjectIds: [storeResult.objectId]
             };
             await burnBlobs(params.clientConf, burnParams);
 
-            // Verify the blob is no longer in the list
-            const blobs = await list_blobs(params.clientConf);
-            expect(blobs.length).toBe(0);
+            // Verify our specific blob is no longer in the list
+            const finalBlobs = await list_blobs(params.clientConf);
+            const burnedBlob = finalBlobs.find(b => b.id === storeResult.objectId);
+            expect(burnedBlob).toBeUndefined();
+            
+            // The total count should be one less than before
+            expect(finalBlobs.length).toBe(initialCount - 1);
         }, 120000);
 
         it.skip('should burn all expired blobs', async () => {
