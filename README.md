@@ -1,92 +1,132 @@
-# Walia Project
+# Walia - Secure File Storage Made Simple
 
-A monorepo containing both Walrus MCP and Move components for the Walia project.
+Walia is a user-friendly file storage system that lets you securely store, share, and manage your files on the decentralized Walrus network. Think of it like a secure cloud storage service, but powered by blockchain technology for better privacy and control.
 
-## Repository Structure
+## What is Walia?
 
-This monorepo is organized as follows:
+Walia helps you:
+- **Store files securely** - Your files are encrypted and stored on a decentralized network
+- **Control who sees what** - Decide exactly who can access your files
+- **Chat with a bot** - Use our Telegram bot to manage files with simple messages
+- **Keep costs low** - Pay only for what you store, with transparent pricing
 
-```
-walia/
-├── packages/
-│   ├── walrus_mcp/  # Walrus MCP component for wallet management and storage
-│   └── move/        # Move smart contracts
-│       └── walia_seal/  # Seal-based whitelist and capability contracts
-└── README.md
-```
+## How does it work?
 
-## Components
+1. **Upload your files** - Through our Telegram bot or command line interface
+2. **Files get encrypted** - Your data is protected before being stored
+3. **Access control** - You decide who can read your files
+4. **Retrieve anytime** - Get your files back whenever you need them
 
-### Walrus MCP Component
+## Getting Started
 
-The Walrus MCP component provides:
+### Option 1: Telegram Bot (Easiest)
+The simplest way to use Walia is through our Telegram bot:
 
-- Wallet management for Sui and Walrus
-- Storage management for Walrus
-- Cost estimation utilities for Walrus storage
-- Helper utilities for development and testing
+1. Find our bot on Telegram: [@WaliaStorageBot](https://t.me/walia_storage_bot)
+2. Send `/start` to begin
+3. Follow the setup instructions
+4. Start storing files by simply sending them to the bot!
 
-### Move Component
+### Option 2: Command Line Interface
+For more advanced users:
 
-The Move component provides:
+1. **Install the software**:
+   ```bash
+   git clone https://github.com/yourusername/walia.git
+   cd walia
+   npm install
+   ```
 
-- Smart contracts for the Walia project
-- WaliaToken implementation
-- Whitelist capabilities for access control
-- WaliaObjCap for capability-based blob access in Walrus
-- Key-based ownership and access management
+2. **Set up your wallet**:
+   ```bash
+   npm run create-dev-wallet
+   ```
 
-## Installation
+3. **Start using Walia**:
+   ```bash
+   # Store a file
+   npm run cli store '{"filePath":"./my-document.pdf","epochs":5}'
+   
+   # List your files
+   npm run cli list-blobs
+   ```
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/walia.git
-cd walia
+## Key Features
 
-# Install dependencies for all packages
-npm install
-```
+### 🔐 **Secure by Design**
+- All files are encrypted before storage
+- You control the encryption keys
+- No one can access your files without permission
 
-## Development
+### 🤖 **Telegram Bot Integration**
+- Store files by simply sending them to our bot
+- Manage files with natural language commands
+- "Store this document for 6 months"
+- "List all my photos from this year"
 
-### Walrus MCP Component
+### 💰 **Transparent Pricing**
+- Pay only for storage time and space used
+- Get cost estimates before storing files
+- No hidden fees or surprise charges
 
-```bash
-# Run Walrus MCP tests
-npm test
+### 🌐 **Decentralized Storage**
+- Files stored on the Walrus network
+- No single point of failure
+- Your data stays available even if we go offline
 
-# Build Walrus MCP component
-npm run build
+### 🔑 **Access Control**
+- Create permission lists for your files
+- Share files securely with specific people
+- Revoke access anytime
 
-# Run Walrus MCP development server
-npm run dev
-```
+## What You Can Do
 
-### Move Component
+### Store Files
+- Upload documents, images, videos, or any file type
+- Choose how long to store them (epochs)
+- Get a unique ID to retrieve them later
 
-```bash
-# Run Move tests
-npm run test:move
+### Manage Access
+- Create whitelists of people who can access your files
+- Add or remove people from access lists
+- Transfer file ownership to others
 
-# Build Move package
-cd packages/move/walia_move
-sui move build
-```
+### Monitor Usage
+- Check your storage costs
+- See how much space you're using
+- View your file history
 
-## Wallet Management
+## Technical Components
 
-See the [Walrus MCP package README](./packages/walrus_mcp/README.md) for detailed documentation on wallet management features.
+Walia consists of three main parts:
 
-## Smart Contracts
+1. **Telegram Bot** - The user-friendly interface for everyday file management
+2. **Storage System** - Handles encryption, storage, and retrieval of files
+3. **Smart Contracts** - Manages access permissions and ownership on the blockchain
 
-The Move smart contracts implement the following functionality:
+## Support
 
-- WaliaToken: A custom token for the Walia project
-- Whitelist: Access control mechanism based on MystenLabs/seal
-- WaliaObjCap: A capability that links to Walrus blobs with key-based access control
-- Token creation and management
-- Balance tracking and management
+Need help? Here are your options:
+
+- **Telegram Support**: Message our bot with questions
+- **Documentation**: Check our detailed guides in the `docs/` folder
+- **Community**: Join our community discussions
+- **Issues**: Report problems on our GitHub page
+
+## Privacy & Security
+
+Your privacy is our priority:
+- Files are encrypted before leaving your device
+- We never see your file contents
+- You control all access permissions
+- Decentralized storage means no central authority
+
+## Getting Help
+
+For detailed technical setup instructions, see our [Setup Guide](SETUP_GUIDE.md).
+
+For contributing to the project, see our [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
-ISC
+ISC - Open source and free to use

@@ -1,376 +1,181 @@
-import { SealConfig, SealManager, WalletManagement } from "@walia/walrus_mcp";
-import { SealConfig, SealManager, WalletManagement } from "@walia/walrus_mcp";
+# Walia Storage Engine - The Heart of Secure File Storage
 
-# Walia Walrus MCP Component
+This is the core technology that powers Walia's secure file storage system. While most users will interact with Walia through the [Telegram bot](../telegram-bot/README.md), this component handles all the behind-the-scenes work.
 
-This package contains the Walrus MCP implementation of wallet management, storage, and utility functionality for the Walia project.
+## What This Component Does
 
-## Features
+### For Users (The Simple Version)
+When you store a file through Walia, this component:
+- 🔐 **Encrypts your files** before they leave your device
+- 💰 **Manages your storage wallet** and calculates costs
+- 🌐 **Connects to the Walrus network** to store files securely
+- 🔑 **Controls access** so only you (and people you choose) can read your files
+- 📊 **Tracks your usage** and storage costs
 
-- Create a wallet environment for a user with:
-  - Ed25519 keypair generation
-  - Keystore management
-  - Sui and Walrus configuration files
-  - Passphrase storage
-- Retrieve user environment configurations
-- Retrieve passphrases for a user's wallet
-- Get SUI and WAL token balances
-- Build and serialize transactions for token transfers
-- Automatically check and update Walrus configurations from the official source
-- Updates all user wallets while preserving wallet-specific settings
-- Single-user or all-users updating options
-- Storage management for Walrus
-- Cost estimation for Walrus storage
-- **NEW**: Seal-based encryption and decryption with threshold cryptography
+### For Developers (The Technical Version)
+This package provides:
+- Wallet management with Ed25519 keypair generation
+- Seal-based encryption and decryption with threshold cryptography  
+- Walrus storage operations and cost estimation
+- MCP (Model Context Protocol) server for external integrations
+- Automatic configuration management and updates
 
-## Installation
+## For Regular Users
 
+**Most users don't need to install or use this component directly.** Instead:
+
+1. **Use the Telegram bot**: Search for `@WaliaStorageBot` on Telegram
+2. **Follow the setup guide**: See our [Setup Guide](../../SETUP_GUIDE.md)
+3. **Let the system handle the technical details**: This component works automatically behind the scenes
+
+## For Developers and Advanced Users
+
+If you want to build your own applications using Walia's storage system or contribute to development:
+
+### Installation
 ```bash
-# Install dependencies
+# Install the required dependencies
 npm install
 ```
 
-## Usage
-
-### Seal Manager - Encryption and Decryption
-
-The SealManager class provides integration with [MystenLabs Seal](https://github.com/MystenLabs/seal) for decentralized secrets management, following the official Seal SDK pattern:
-
+### Basic Usage Example
 ```typescript
+// Import the Walia components
+import { WalletManagement, SealManager, StorageManager } from "@walia/walrus_mcp";
 
-// Create wallet management instance
-const wallet = new WalletManagement('alice');
+// Create a user wallet (happens automatically for Telegram bot users)
+const userWallet = new WalletManagement('alice');
+await userWallet.ensureWallet();
 
-// Configure Seal with your whitelist contract and key servers
-const sealConfig: SealConfig = {
-  whitelistPackageId: '0x...', // Your deployed whitelist contract
-  keyServerUrls: [
-    'https://keyserver1.example.com',
-    'https://keyserver2.example.com'
-  ],
-  threshold: 2, // Require 2 out of 2 key servers
-  network: 'testnet'
-};
-
-// Create SealManager instance
-const sealManager = new SealManager(wallet, sealConfig);
-
-// Encrypt sensitive data (automatically creates whitelist and Cap objects)
-const sensitiveData = "This is my secret message";
-
-const encryptedData = await sealManager.encrypt(sensitiveData, {
-  initialMembers: ['0x123...', '0x456...'] // Optional initial whitelist members
+// Store a file securely
+const storageManager = new StorageManager(userWallet);
+const result = await storageManager.storeFile('./my-document.pdf', {
+  epochs: 5, // Store for 5 epochs
+  encryptFile: true // Encrypt before storage
 });
 
-console.log('Encrypted data:', encryptedData);
-console.log('Whitelist ID:', encryptedData.whitelistObjectId);
-console.log('Cap ID:', encryptedData.capObjectId);
+console.log('File stored with ID:', result.blobId);
 
-// Decrypt the data (only if you're in the whitelist)
-const decryptedData = await sealManager.decrypt(encryptedData);
-console.log('Decrypted data:', decryptedData.toString());
-
-// Add more members to the whitelist (requires Cap ownership)
-await sealManager.addMembersToWhitelistViaCLI(
-  encryptedData.whitelistObjectId,
-  encryptedData.capObjectId,
-  ['0x789...']
-);
-
-// Create a WaliaObjCap for a Walrus blob
-const waliaObjCapId = await sealManager.createWaliaObjCap(
-  encryptedData.capObjectId,
-  'walrus_blob_id'
-);
+// Retrieve the file later
+const fileContent = await storageManager.readFile(result.blobId);
+console.log('Retrieved file content');
 ```
 
-#### Key Features of the Implementation
+### Understanding the Security System
 
-Following the MystenLabs Seal SDK pattern, the SealManager:
+Walia uses a multi-layered security approach:
 
-1. **Automatic Whitelist Creation**: Before encryption, it creates a whitelist object on-chain
-2. **Cap Object Management**: The Cap object is automatically added to your wallet for whitelist administration
-3. **Whitelist-Based Encryption**: Uses the whitelist address as the encryption ID
-4. **CLI Integration**: Uses Sui CLI for reliable on-chain operations
-5. **Threshold Decryption**: Supports configurable threshold key servers
+1. **Your files are encrypted** on your device before being sent anywhere
+2. **Access control lists** determine who can decrypt your files  
+3. **Distributed key servers** ensure no single point of failure
+4. **Blockchain verification** provides tamper-proof access records
 
-#### Implementation Flow
+### How the System Works Behind the Scenes
 
+When you store a file through Walia:
+
+1. **File gets encrypted** locally on your device using advanced encryption
+2. **Access permissions are set** using blockchain-based smart contracts
+3. **Encrypted file is stored** on the decentralized Walrus network
+4. **You get a unique file ID** to retrieve your file anytime
+5. **Only authorized users** can decrypt and access the original file
+
+### Available Operations
+
+For developers building on Walia, the system provides:
+
+#### File Operations
 ```typescript
-// 1. Create whitelist and receive Cap (happens automatically during encrypt)
-const whitelistResult = await sealManager.createWhitelistWithCap(['0x123...']);
-
-// 2. Whitelist address is used as encryption ID
-const encryptionId = whitelistResult.whitelistId;
-
-// 3. Symmetric key encryption with whitelist context
-// 4. Threshold encryption of symmetric key
-// 5. Store key association linked to whitelist
-
-// For decryption:
-// 1. Verify access through whitelist contract
-// 2. Request key shares from threshold servers
-// 3. Reconstruct symmetric key
-// 4. Decrypt original data
-```
-
-### Function-based approach
-
-```typescript
-// Create a wallet environment for a user
-const wallet = await createWalletEnvironment('alice');
-console.log('Wallet address:', wallet.address);
-
-// Get user environment
-const env = getUserEnvironment('alice');
-console.log('User environment:', env);
-
-// Get pass phrases
-const passPhrases = getPassPhrases('alice');
-console.log('Pass phrases:', passPhrases);
-
-// Get balances
-const balance = await getBalance('alice');
-console.log('Balances:', balance);
-
-// Build and serialize transaction
-const tx = await buildAndSerializeTransaction('alice', 'bob', '1000000', '0');
-console.log('Transaction:', tx);
-```
-
-### Class-based approach (recommended)
-
-```typescript
-// Create a wallet management instance
-const aliceWallet = new WalletManagement('alice');
-
-// Ensure the wallet exists (creates it if not)
-const walletInfo = await aliceWallet.ensureWallet();
-console.log('Wallet address:', walletInfo.address);
-
-// Get user environment
-const env = aliceWallet.getUserEnvironment();
-console.log('User environment:', env);
-
-// Get pass phrases
-const passPhrases = aliceWallet.getPassPhrases();
-console.log('Pass phrases:', passPhrases);
-
-// Get balances
-const balance = await aliceWallet.getBalance();
-console.log('Balances:', balance);
-
-// Build and serialize transaction
-const tx = await aliceWallet.buildAndSerializeTransaction('bob', '1000000', '0');
-console.log('Transaction:', tx);
-
-// Change environment
-aliceWallet.setActiveEnvironment('mainnet');
-console.log('New environment:', aliceWallet.getSuiActiveEnvironment());
-
-// Update Walrus config from the official source (for a single user)
-const updated = await aliceWallet.updateWalrusConfigFromSource();
-console.log('Was config updated?', updated);
-
-// Update Walrus config for all users
-const result = await checkAndUpdateWalrusConfig();
-console.log('Updated wallets:', result.wallets.length);
-```
-
-## Storage Management
-
-```typescript
-
-// Store a file
-const result = await store('path/to/file', {
-  clientConf,
-  epochs: 10,
-  attributes: {
-    name: 'Example file',
-    type: 'document',
-  }
+// Store a file with encryption
+const result = await storageManager.storeFile('./document.pdf', {
+  epochs: 10,        // Store for 10 epochs
+  encrypted: true    // Encrypt before storage
 });
 
-// Read a file by blob ID
-const content = await read(result.blobId, { clientConf });
+// Retrieve a file by ID
+const fileContent = await storageManager.readFile(result.blobId);
 
-// List all blobs
-const blobs = await list_blobs(clientConf);
+// List all stored files
+const fileList = await storageManager.listFiles();
 
-// Burn specific blobs
-await burnBlobs(clientConf, [blob1.id, blob2.id]);
-
-// Estimate storage costs
-const estimator = new WalrusCostEstimator(clientConf);
-await estimator.initialize();
-const cost = await estimator.estimateStorageCost(fileSize, epochs);
+// Delete files
+await storageManager.deleteFiles([fileId1, fileId2]);
 ```
 
-## MCP Server
+#### Wallet Operations
+```typescript
+// Check storage balance
+const balance = await wallet.getBalance();
+console.log(`You have ${balance.sui} SUI tokens`);
 
-The project includes a Model Context Protocol (MCP) server that provides a standardized interface for interacting with Walia storage operations. The MCP server allows external applications (like the Telegram bot) to perform storage operations through a secure, structured API.
+// Get cost estimates
+const estimator = new WalrusCostEstimator();
+const cost = await estimator.estimateStorageCost(fileSize, storageEpochs);
+console.log(`Storage will cost approximately ${cost} tokens`);
+```
 
-### Starting the MCP Server
+## Integration Server (MCP Server)
+
+This component includes a server that allows other applications (like our Telegram bot) to securely connect to Walia's storage system. Think of it as a secure bridge that lets different apps work with your files.
+
+### For Developers Building Integrations
+
+If you want to connect your own application to Walia:
 
 ```bash
-# Development mode (auto-reload on changes)
-npm run mcp-server:dev
-
-# Production mode (build and run)
-npm run mcp-server:build
-
-# Run pre-built version
+# Start the integration server
 npm run mcp-server
 ```
 
-### Available MCP Tools
+The server provides secure access to:
+- File storage and retrieval operations
+- Wallet balance checking
+- Cost estimation
+- User management
 
-The MCP server provides the following tools:
+### Built-in Security Features
 
-- **walia_store** - Store a file to Walrus with seal encryption
-- **walia_read** - Read and decrypt a file from Walrus
-- **walia_list_blobs** - List all blobs in Walrus storage
-- **walia_get_blob_attributes** - Get attributes for a specific blob
-- **walia_add_blob_attributes** - Add attributes to a blob
-- **walia_burn_blobs** - Delete blobs from Walrus storage
-- **walia_send_blob** - Transfer a blob to another Sui address
-- **walia_get_blob_object_id** - Get blob object ID from blob ID
-- **walia_get_wallet_balance** - Get SUI and Walrus balance for a wallet
-- **walia_get_wallet_address** - Get the wallet address for a user
+The Walia storage engine includes several layers of security:
 
-### MCP Client Integration
+#### Advanced Encryption
+- **Multi-server encryption**: Your encryption keys are split across multiple servers
+- **Threshold security**: Multiple servers must cooperate to decrypt files
+- **On-chain access control**: Blockchain technology manages who can access what
 
-Applications can connect to the MCP server using the standard MCP protocol:
+#### Privacy Protection
+- **Local encryption**: Files are encrypted on your device before upload
+- **Zero-knowledge storage**: The storage network never sees your unencrypted data
+- **Decentralized architecture**: No single point of failure or control
 
-```typescript
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+#### Access Management
+- **User-controlled permissions**: You decide who can access your files
+- **Revocable access**: Remove someone's access anytime
+- **Audit trails**: All access attempts are recorded on the blockchain
 
-const transport = new StdioClientTransport({
-  command: 'npm',
-  args: ['run', 'mcp-server']
-});
+## Setting Up for Development
 
-const client = new Client({
-  name: 'walia-client',
-  version: '1.0.0'
-}, {
-  capabilities: {}
-});
+### Quick Development Setup
 
-await client.connect(transport);
-
-// List available tools
-const tools = await client.request({
-  method: 'tools/list',
-  params: {}
-});
-
-// Store a file
-const result = await client.request({
-  method: 'tools/call',
-  params: {
-    name: 'walia_store',
-    arguments: {
-      userName: 'alice',
-      walletsDir: './dev-wallets',
-      environment: 'testnet',
-      filePath: './document.txt',
-      epochs: 5
-    }
-  }
-});
-
-// Get wallet address
-const address = await client.request({
-  method: 'tools/call',
-  params: {
-    name: 'walia_get_wallet_address',
-    arguments: {
-      userName: 'alice',
-      walletsDir: './dev-wallets',
-      environment: 'testnet'
-    }
-  }
-});
-
-// Get wallet balance
-const balance = await client.request({
-  method: 'tools/call',
-  params: {
-    name: 'walia_get_wallet_balance',
-    arguments: {
-      userName: 'alice',
-      walletsDir: './dev-wallets',
-      environment: 'testnet'
-    }
-  }
-});
-```
-
-### Environment Variables
-
-The MCP server supports environment variables for configuration:
+For developers who want to test Walia locally:
 
 ```bash
-# Set custom package ID for different environments
-export WALIA_SEAL_PACKAGE_ID=0x...
-
-# Environment-specific package IDs
-export WALIA_SEAL_PACKAGE_ID_TESTNET=0x...
-export WALIA_SEAL_PACKAGE_ID_MAINNET=0x...
-```
-
-### Testing the MCP Server
-
-```bash
-# Test MCP server connection and basic operations
-npm run test-mcp
-```
-
-## Seal Integration Features
-
-The SealManager integrates with the Walia whitelist contract to provide:
-
-- **Threshold Encryption**: Uses multiple key servers for enhanced security
-- **Access Control**: Leverages on-chain whitelists for fine-grained permissions
-- **Walrus Integration**: Links encrypted data to Walrus blobs via WaliaObjCap
-- **Decentralized Key Management**: No single point of failure for key storage
-
-### Security Considerations
-
-- Always use HTTPS endpoints for key servers
-- Verify key server certificates in production
-- Use appropriate threshold values (recommend at least 2-out-of-3)
-- Store whitelist IDs securely
-- Monitor access patterns for suspicious activity
-
-## Development Wallets for Testing
-
-The project provides tools to create and test development wallets for integration testing with real blockchain interactions. These wallets can be used in tests to verify storage, balance checks, and other blockchain operations.
-
-### Creating a Development Wallet
-
-Use the `demo.ts` script to create a development wallet:
-
-```bash
-# Create a wallet with default settings (username: walia, environment: testnet)
+# Create a test wallet (this happens automatically for regular users)
 npm run create-dev-wallet
-
-# Create a wallet with custom parameters
-npm run create-dev-wallet -- --userName=myTestWallet --walletsDir=./dev-wallets --environment=testnet
 ```
 
-Available parameters:
-- `--userName`: The wallet username (default: walia)
-- `--walletsDir`: Directory to store wallets (default: ./dev-wallets)
-- `--environment`: Network environment (options: testnet, mainnet, devnet, localnet)
+This creates a secure test environment with:
+- A unique wallet address for testing
+- Free test tokens to try storing files
+- All security features enabled
+- Safe sandbox environment (no real money involved)
 
-The script will create the wallet and display:
-- Wallet address
-- Current balance
-- Recovery mnemonic (save this to fund the wallet)
-- Instructions for using the wallet in tests
+### What Gets Created
+
+When you run the setup, Walia creates:
+- **Secure wallet**: Your own private wallet for testing
+- **Test tokens**: Free tokens to experiment with storage
+- **Configuration files**: Everything needed to connect to the test network
+- **Security keys**: Encrypted keys stored safely on your device
 
 ### Testing the Development Wallet
 

@@ -1,86 +1,152 @@
-# Contributing to Walia
+# Contributing to Walia - Help Make File Storage Better!
 
-Thank you for your interest in contributing to Walia! This document provides guidelines and instructions for contributing.
+Thank you for wanting to help improve Walia! Whether you're a developer, designer, writer, or just someone with great ideas, there are many ways to contribute.
 
-## Code of Conduct
+## How You Can Help
 
-By participating in this project, you agree to abide by our code of conduct: Be respectful, considerate, and collaborative.
+### 🐛 **Report Issues**
+Found a problem? Let us know!
+- Use the Telegram bot to report issues: message `@WaliaStorageBot`
+- Tell us what happened, what you expected, and how to reproduce the problem
+- Screenshots are super helpful!
 
-## How to Contribute
+### 💡 **Suggest Features**
+Have an idea for making Walia better?
+- Share your ideas in our Telegram community
+- Describe what you'd like to see and why it would be useful
+- We love hearing from users about what would make their experience better
 
-### Prerequisites
+### 📝 **Improve Documentation**
+Help make our guides clearer:
+- Fix typos or confusing sections
+- Add examples that helped you understand something
+- Translate documentation to other languages
+- Write tutorials for specific use cases
 
-- Node.js (version 16.x or higher)
-- npm (comes with Node.js)
+### 🎨 **Design and User Experience**
+- Suggest improvements to the Telegram bot interface
+- Help design better user flows
+- Create graphics, icons, or visual aids
+- Test the user experience and provide feedback
 
-### Setting Up the Development Environment
+### 💻 **Code Contributions** (For Developers)
 
-1. Fork the repository
-2. Clone your fork locally:
+#### Getting Started
+1. **Fork the project** on GitHub
+2. **Set up your development environment**:
    ```bash
    git clone https://github.com/your-username/Walia.git
    cd Walia
-   ```
-3. Install dependencies:
-   ```bash
    npm install
    ```
-4. Create a new branch for your contribution:
+3. **Create a branch** for your changes:
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b improve-user-experience
    ```
 
-### Development Workflow
-
-1. Make your changes
-2. Run the tests to ensure everything works:
+#### Making Changes
+1. **Make your improvements**
+2. **Test everything works**:
    ```bash
-   # Run wallet management tests
    npm run test:wallet
+   npm test
    ```
-3. Build the wallet module:
+3. **Build the project**:
    ```bash
-   npm run build:wallet
+   npm run build
    ```
 
-### Submitting Changes
-
-1. Commit your changes:
+#### Submitting Your Work
+1. **Commit your changes**:
    ```bash
-   git commit -m "Description of your changes"
+   git commit -m "Add helpful feature for new users"
    ```
-2. Push to your fork:
+2. **Push to your fork**:
    ```bash
-   git push origin feature/your-feature-name
+   git push origin improve-user-experience
    ```
-3. Open a pull request against the main repository
+3. **Create a pull request** on GitHub
 
-## Testing
+## Code Guidelines (For Developers)
 
-We use Vitest for testing. Tests should be written for all new features and bug fixes.
+### Keep It Simple
+- Write clear, readable code
+- Use descriptive names for variables and functions
+- Add comments to explain why you did something (not just what)
 
-```bash
-# Run specific tests
-npx vitest run src/__tests__/wallet-management.test.ts
+### Follow the Pattern
+- Look at existing code to understand our style
+- Use TypeScript for type safety
+- Write tests for new features
 
-# Run all tests
-npm test
-```
+### Focus on Users
+- Think about how changes affect regular users
+- Prioritize security and privacy
+- Keep the interface simple and intuitive
 
-## Code Style
+## Types of Contributions We Need
 
-- We use TypeScript for type safety
-- Follow the existing code style
-- Use descriptive variable names
-- Add comments for complex logic
+### High Priority
+- **Bug fixes** - Especially issues affecting the Telegram bot
+- **Security improvements** - Better encryption, privacy features
+- **User experience** - Making the system easier to use
+- **Documentation** - Clearer guides and examples
 
-## Pull Request Process
+### Medium Priority
+- **Performance improvements** - Faster file uploads/downloads
+- **New features** - Additional file management capabilities
+- **Integration** - Support for more platforms and services
 
-1. Ensure your code passes all tests
-2. Update documentation if necessary
-3. The PR should be focused on a single feature or bug fix
-4. Your PR will be reviewed by maintainers who may request changes
+### Always Welcome
+- **Testing** - Try new features and report what you find
+- **Feedback** - Tell us what works and what doesn't
+- **Community building** - Help other users get started
 
-## License
+## Review Process
 
-By contributing to this project, you agree that your contributions will be licensed under the project's license. 
+### What Happens After You Contribute
+1. **We review your contribution** - Usually within a few days
+2. **We might ask questions** - Help us understand your changes
+3. **We test everything** - Make sure it works well with existing features
+4. **We merge approved changes** - Your contribution becomes part of Walia!
+
+### Getting Feedback
+- All contributions are reviewed by maintainers
+- We'll provide constructive feedback to help improve your contribution
+- Don't worry if we ask for changes - it's normal and helps make Walia better
+- We appreciate all contributions, big and small
+
+## Community Guidelines
+
+### Be Kind and Respectful
+- Everyone is here to learn and help
+- Ask questions if you're unsure about something
+- Help others when you can
+- Respect different levels of technical experience
+
+### Stay Focused
+- Keep discussions relevant to Walia
+- Use appropriate channels for different types of discussions
+- Be patient with responses - we're often volunteers
+
+## Getting Recognition
+
+### Contributors Hall of Fame
+- All contributors are credited in our documentation
+- Significant contributions are highlighted in release notes
+- Active contributors may be invited to join the core team
+
+## Questions?
+
+### Need Help?
+- **General questions**: Ask in our Telegram community
+- **Technical questions**: Create an issue on GitHub
+- **Private concerns**: Message the maintainers directly
+
+### Quick Links
+- [Main README](README.md) - Overview of Walia
+- [Setup Guide](SETUP_GUIDE.md) - How to get started
+- [Telegram Bot](https://t.me/walia_storage_bot) - Try Walia now
+- [GitHub Issues](https://github.com/yourproject/walia/issues) - Report bugs or request features
+
+Thank you for helping make Walia better for everyone! 🎉 

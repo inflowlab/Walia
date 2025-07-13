@@ -1,508 +1,187 @@
-# Walia Project - Complete Setup Guide
+# Walia Setup Guide - Get Started in Minutes
 
-This comprehensive guide covers the complete setup and deployment process for the Walia project, including project installation, wallet configuration, Move contract deployment, and test execution.
+This guide will help you set up Walia on your computer so you can start storing files securely. We'll walk you through everything step by step.
 
 ## Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [Prerequisites](#prerequisites)
-3. [Project Setup](#project-setup)
-4. [Dev Wallet Setup](#dev-wallet-setup)
-5. [Walia Seal Contract Deployment](#walia-seal-contract-deployment)
-6. [Test Execution Order](#test-execution-order)
-7. [Integration Test Configuration](#integration-test-configuration)
-8. [Common Issues and Solutions](#common-issues-and-solutions)
+1. [Quick Start (Recommended)](#quick-start-recommended)
+2. [What You Need](#what-you-need)
+3. [Step-by-Step Setup](#step-by-step-setup)
+4. [Using the Telegram Bot](#using-the-telegram-bot)
+5. [Testing Your Setup](#testing-your-setup)
+6. [Getting Help](#getting-help)
 
-## Project Overview
+## Quick Start (Recommended)
 
-The Walia project is a monorepo containing:
+**For most users, we recommend using the Telegram bot** - it's the easiest way to get started with Walia without any technical setup.
 
-```
-walia/
-├── packages/
-│   ├── walrus_mcp/              # Walrus MCP wallet and storage management
-│   │   ├── src/                # Source code
-│   │   ├── __tests__/          # Test files
-│   │   ├── dev-wallets/        # Development wallet configurations
-│   │   │   └── walia/          # Default wallet setup
-│   │   └── package.json        # TypeScript package configuration
-│   └── move/                   # Move smart contracts
-│       └── walia_seal/         # Seal-based whitelist contracts
-├── package.json                # Root package configuration
-└── README.md
-```
+1. **Find our bot on Telegram**: Search for `@WaliaStorageBot`
+2. **Send `/start`** to begin the setup
+3. **Follow the instructions** the bot provides
+4. **Start storing files** by sending them directly to the bot
 
-## Prerequisites
+That's it! No installation required.
 
-### Required Software
+## What You Need
 
-1. **Node.js** (v18 or higher)
+### For Telegram Bot Users (Easiest)
+- A Telegram account
+- Some free testnet tokens (the bot will help you get these)
+
+### For Command Line Users (Advanced)
+- A computer running Windows, Mac, or Linux
+- Node.js (version 18 or newer) - [Download here](https://nodejs.org/)
+- About 15 minutes of setup time
+
+## Step-by-Step Setup
+
+### Check if Node.js is Installed
+
+First, let's see if you have Node.js installed:
+
+1. **Open your terminal** (Command Prompt on Windows, Terminal on Mac/Linux)
+2. **Type this command**:
    ```bash
-   # Check version
    node --version
-   npm --version
+   ```
+3. **If you see a version number** like `v18.0.0` or higher, you're good to go!
+4. **If you get an error**, [download and install Node.js](https://nodejs.org/)
+
+### Download Walia
+
+1. **Download the code**:
+   ```bash
+   git clone https://github.com/yourusername/walia.git
+   cd walia
    ```
 
-2. **Sui CLI** (latest version)
+2. **Install everything you need**:
    ```bash
-   # Install Sui CLI
-   cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
-   
-   # Verify installation
-   sui --version
-   ```
-
-3. **Walrus CLI** (latest version)
-   ```bash
-   # Install Walrus CLI (follow official documentation)
-   # Verify installation
-   walrus --version
-   ```
-
-### Network Access
-
-- **Sui Testnet**: Access to https://fullnode.testnet.sui.io:443
-- **Walrus Testnet**: Access to Walrus storage nodes
-- **SUI Tokens**: Testnet SUI tokens for gas fees
-
-## Project Setup
-
-### 1. Clone and Install
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/walia.git
-cd walia
-
-# Install all dependencies
-npm install
-
-# Install Walrus MCP-specific dependencies
-npm install --workspace=packages/walrus_mcp
-```
-
-### 2. Verify Installation
-
-```bash
-# Check if builds work
-npm run build
-
-# Verify Walrus MCP builds
-cd packages/walrus_mcp
-npm run build
-```
-
-## Dev Wallet Setup
-
-### Automatic Wallet Creation
-
-The project includes scripts to create development wallets automatically:
-
-```bash
-# Create a development wallet (from project root)
-npm run create-dev-wallet
-
-# Or create with specific parameters
-cd packages/walrus_mcp
-npm run create-dev-wallet -- --userName=walia --walletsDir=./dev-wallets --environment=testnet
-```
-
-### Manual Wallet Setup
-
-If you need to set up wallets manually:
-
-#### 1. Create Wallet Directory Structure
-
-```bash
-# From packages/walrus_mcp directory
-mkdir -p dev-wallets/walia
-cd dev-wallets/walia
-```
-
-#### 2. Generate Sui Keypair
-
-```bash
-# Generate a new keypair
-sui keytool generate ed25519
-
-# This creates entries in your default Sui configuration
-# Copy the generated address for the next steps
-```
-
-#### 3. Create Sui Client Configuration
-
-Create `sui_client.yaml`:
-
-```yaml
-keystore:
-  File: /absolute/path/to/walia/packages/walrus_mcp/dev-wallets/walia/sui.keystore
-envs:
-  - alias: testnet
-    rpc: https://fullnode.testnet.sui.io:443
-    ws: ~
-    basic_auth: ~
-  - alias: localnet
-    rpc: http://127.0.0.1:9000
-    ws: ~
-    basic_auth: ~
-  - alias: mainnet
-    rpc: https://fullnode.mainnet.sui.io:443
-    ws: ~
-    basic_auth: ~
-  - alias: devnet
-    rpc: https://fullnode.devnet.sui.io:443
-    ws: ~
-    basic_auth: ~
-active_env: testnet
-active_address: 'YOUR_GENERATED_ADDRESS_HERE'
-```
-
-#### 4. Create Keystore File
-
-Create `sui.keystore` with your keypair:
-
-```json
-[
-  "YOUR_PRIVATE_KEY_IN_SUI_FORMAT"
-]
-```
-
-#### 5. Create Walrus Client Configuration
-
-Create `walrus_client_config.yaml`:
-
-```yaml
-contexts:
-  testnet:
-    system_object: "0x6c2547cbbc38025cf3adac45f63cb0a8d12ecf777cdc75a4971612bf97fdf6af"
-    staking_object: "0xbe46180321c30aab2f8b3501e24048377287fa708018a5b7c2792b35fe339ee3"
-    subsidies_object: "0xda799d85db0429765c8291c594d334349ef5bc09220e79ad397b30106161a0af"
-    exchange_objects:
-      - "0xf4d164ea2def5fe07dc573992a029e010dba09b1a8dcbc44c5c2e79567f39073"
-      - "0x19825121c52080bb1073662231cfea5c0e4d905fd13e95f21e9a018f2ef41862"
-      - "0x83b454e524c71f30803f4d6c302a86fb6a39e96cdfb873c2d1e93bc1c26a3bc5"
-      - "0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1"
-    wallet_config:
-      path: "/absolute/path/to/walia/packages/walrus_mcp/dev-wallets/walia/sui_client.yaml"
-      active_env: testnet
-      active_address: "YOUR_ADDRESS_HERE"
-    rpc_urls:
-      - https://fullnode.testnet.sui.io:443
-default_context: testnet
-```
-
-#### 6. Fund Your Wallet
-
-```bash
-# Get testnet SUI tokens
-sui client faucet
-
-# Verify balance
-sui client balance
-```
-
-### Wallet Directory Structure
-
-After setup, your wallet directory should look like:
-
-```
-dev-wallets/walia/
-├── data/                    # Walrus data storage
-├── sui_client.yaml         # Sui client configuration
-├── walrus_client_config.yaml # Walrus client configuration
-├── keypair.json            # Keypair information
-├── sui.aliases             # Sui aliases
-└── sui.keystore           # Private key storage
-```
-
-## Walia Seal Contract Deployment
-
-### 1. Build the Contract
-
-```bash
-# Navigate to the Move contract directory
-cd packages/move/walia_seal
-
-# Build the contract
-sui move build
-```
-
-### 2. Deploy to Testnet
-
-```bash
-# Make sure you're connected to testnet
-sui client switch --env testnet
-
-# Deploy the contract
-sui client publish --gas-budget 100000000
-
-# Save the package ID from the output for later use
-# Example output:
-# Package published at: 0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507
-```
-
-### 3. Verify Deployment
-
-```bash
-# Verify the package exists
-sui client object YOUR_PACKAGE_ID
-
-# Check your gas balance after deployment
-sui client balance
-```
-
-### 4. Update Walrus MCP Configuration
-
-After deployment, update your Walrus MCP code with the new package ID:
-
-```typescript
-// In your test or application code
-const WALIA_SEAL_PACKAGE_ID = "0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507";
-```
-
-## Test Execution Order
-
-### Understanding Test Categories
-
-The project has several test categories with different requirements:
-
-1. **Unit Tests** - No external dependencies
-2. **Integration Tests** - Require Sui testnet connectivity
-3. **Walrus Integration Tests** - Require both Sui and Walrus connectivity
-
-### Recommended Test Order
-
-#### 1. Unit Tests First
-
-```bash
-# Run wallet management tests (basic functionality)
-npm run test:wallet
-```
-
-Expected output:
-```
-✅ Wallet Management Tests (14/14 passing)
-✅ Wallet Advanced Tests (7/7 passing)
-```
-
-#### 2. Wallet Class Tests
-
-```bash
-# Run wallet class tests
-npm run test:wallet:class
-```
-
-Expected output:
-```
-✅ Wallet Class Tests (16/16 passing)
-```
-
-#### 3. Basic Integration Tests
-
-```bash
-# Run integration tests without Walrus
-npm test
-```
-
-Expected output:
-```
-✅ 38+ tests passing
-❌ 0-5 tests failing (seal tests may fail if not configured)
-⏭️ ~15 tests skipped (Walrus tests)
-```
-
-#### 4. Full Integration Tests with Walrus
-
-```bash
-# Run all tests including Walrus integration
-RUN_WALRUS_INTEGRATION_TESTS=true npm test
-```
-
-Expected output:
-```
-✅ 40+ tests passing
-❌ 0-4 tests failing (only seal concurrency issues)
-⏭️ ~1 test skipped
-```
-
-### Specific Test Commands
-
-```bash
-# Run specific test files
-npx vitest run src/__tests__/wallet-management.test.ts
-npx vitest run src/__tests__/storage.test.ts
-npx vitest run src/__tests__/seal.test.ts
-
-# Run tests with verbose output
-npm test -- --reporter=verbose
-
-# Run tests in watch mode for development
-npm run test:watch
-```
-
-### Test Environment Variables
-
-Important environment variables for testing:
-
-```bash
-# Enable Walrus integration tests
-export RUN_WALRUS_INTEGRATION_TESTS=true
-
-# Set custom wallet directory (optional)
-export WALLETS_DIR=/path/to/custom/wallets
-
-# Set specific user for tests (optional)
-export TEST_USER=walia
-```
-
-## Integration Test Configuration
-
-### Required Configuration for Full Integration Tests
-
-1. **Funded Wallet**: Your test wallet needs sufficient SUI tokens
-2. **Walrus Access**: Network connectivity to Walrus storage nodes
-3. **Deployed Contract**: Walia Seal contract deployed on testnet
-
-### Environment Setup for CI/CD
-
-```bash
-# .env file for CI/CD
-RUN_WALRUS_INTEGRATION_TESTS=true
-WALIA_SEAL_PACKAGE_ID=0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507
-SUI_NETWORK=testnet
-WALLETS_DIR=./dev-wallets
-```
-
-### Test File Descriptions
-
-1. **`wallet-management.test.ts`** - Core wallet operations
-2. **`wallet-advanced.test.ts`** - Advanced wallet features
-3. **`wallet-class.test.ts`** - Wallet class functionality
-4. **`storage.test.ts`** - Walrus storage integration
-5. **`seal.test.ts`** - Seal encryption/decryption
-6. **`walrus-cost-estimator.test.ts`** - Cost estimation utilities
-
-## Common Issues and Solutions
-
-### 1. SUI CLI Issues
-
-**Problem**: `sui keytool` command not found
-```bash
-# Solution: Reinstall Sui CLI
-cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
-```
-
-**Problem**: Invalid keystore path
-```bash
-# Solution: Use absolute paths in configuration files
-# Update sui_client.yaml with full absolute paths
-```
-
-### 2. Wallet Configuration Issues
-
-**Problem**: Tests failing with "Wallet not found"
-```bash
-# Solution: Verify wallet directory structure
-ls -la dev-wallets/walia/
-# Should contain: sui_client.yaml, walrus_client_config.yaml, sui.keystore
-```
-
-**Problem**: Insufficient gas
-```bash
-# Solution: Fund your wallet
-sui client faucet
-sui client balance
-```
-
-### 3. Contract Deployment Issues
-
-**Problem**: "Object does not exist" during contract interaction
-```bash
-# Solution: Redeploy contract and update package ID
-cd packages/move/walia_seal
-sui client publish --gas-budget 100000000
-```
-
-### 4. Test Execution Issues
-
-**Problem**: Tests timeout or fail intermittently
-```bash
-# Solution: Run tests sequentially
-npm test -- --reporter=verbose --timeout=120000
-```
-
-**Problem**: Seal tests failing with TypeMismatch
-```bash
-# Solution: This is a known concurrency issue
-# Tests are functionally correct but may fail due to object locks
-# Run individual seal tests:
-npx vitest run src/__tests__/seal.test.ts --timeout=120000
-```
-
-### 5. Walrus Integration Issues
-
-**Problem**: Walrus tests skipped
-```bash
-# Solution: Enable integration tests
-export RUN_WALRUS_INTEGRATION_TESTS=true
-npm test
-```
-
-**Problem**: Walrus CLI not found
-```bash
-# Solution: Install Walrus CLI and ensure it's in PATH
-which walrus
-# If not found, install following official Walrus documentation
-```
-
-## Development Workflow
-
-### For New Developers
-
-1. **Setup Environment**:
-   ```bash
-   git clone <repo>
    npm install
-   npm run create-dev-wallet
    ```
 
-2. **Get Test Funds**:
+3. **Build the project**:
    ```bash
-   sui client faucet
+   npm run build
    ```
 
-3. **Deploy Contracts**:
-   ```bash
-   cd packages/move/walia_seal
-   sui client publish --gas-budget 100000000
-   ```
+### Create Your Wallet
 
-4. **Run Tests Incrementally**:
-   ```bash
-   npm run test:wallet      # Start with unit tests
-   npm test                 # Basic integration
-   RUN_WALRUS_INTEGRATION_TESTS=true npm test  # Full integration
-   ```
+This creates a secure wallet for storing your files:
 
-### For Continuous Integration
-
-```yaml
-# Example GitHub Actions workflow
-name: Test
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm install
-      - run: npm run build
-      - run: npm run test:wallet
-      - run: npm test
-      # Walrus tests might be disabled in CI due to network requirements
+```bash
+npm run create-dev-wallet
 ```
 
-This completes the comprehensive setup guide for the Walia project. Follow these steps in order for the best experience setting up and running the project. 
+The system will create your wallet and show you:
+- Your wallet address
+- Your current balance (probably zero at first)
+- Instructions for getting test tokens
+
+## Using the Telegram Bot
+
+Once you have either set up the command line version OR want to use just the Telegram bot:
+
+### Setting Up the Bot
+
+1. **Find the bot**: Search for `@WaliaStorageBot` on Telegram
+2. **Start a conversation**: Send `/start`
+3. **Get your setup info**: The bot will tell you your unique username and wallet address
+4. **Get test tokens**: The bot will help you get free tokens for testing
+
+### Bot Commands You Can Use
+
+- **`/start`** - Welcome and setup
+- **`/help`** - Show all commands
+- **`/balance`** - Check how much storage credit you have
+- **`/list`** - See all your stored files
+- **`/config`** - View your settings
+
+### Natural Language Commands
+
+You can also just talk to the bot naturally:
+- "Store this document for 6 months"
+- "Show me all my files"
+- "What's my wallet address?"
+- "How much storage do I have left?"
+
+## Testing Your Setup
+
+### Command Line Testing
+
+1. **Store a test file**:
+   ```bash
+   echo "Hello Walia!" > test.txt
+   npm run cli store '{"filePath":"./test.txt","epochs":5}'
+   ```
+
+2. **List your files**:
+   ```bash
+   npm run cli list-blobs
+   ```
+
+3. **Check your balance**:
+   ```bash
+   npm run cli balance
+   ```
+
+### Telegram Bot Testing
+
+1. **Send a simple message** to the bot: "Store this message for testing"
+2. **Ask for your file list**: "What files do I have?"
+3. **Check your balance**: "How much storage credit do I have?"
+
+## Getting Help
+
+### Common Issues and Quick Fixes
+
+#### "I can't find the Telegram bot"
+- Make sure you're searching for the exact name: `@WaliaStorageBot`
+- Try searching in the global search (not just your chats)
+
+#### "The setup command failed"
+Try these steps:
+1. Make sure you have Node.js installed (check with `node --version`)
+2. Try running `npm install` again
+3. If you're on Windows, try running your terminal as Administrator
+
+#### "I don't have any storage tokens"
+- Use the Telegram bot command `/balance` to check your balance
+- The bot can help you get free test tokens for trying out the system
+- Each new user gets some free tokens to start with
+
+#### "My files aren't showing up"
+- Try the command `/list` in the Telegram bot
+- For command line: `npm run cli list-blobs`
+- Remember that it might take a few minutes for files to be fully stored
+
+#### "I want to use this for real files (not just testing)"
+Currently, Walia is in testing mode using testnet tokens. This means:
+- Your files are stored securely
+- The tokens you use are free test tokens
+- The system works the same as it will in production
+- When we launch officially, you'll be able to use real tokens
+
+### Getting More Help
+
+1. **Telegram Support**: Message our bot `@WaliaStorageBot` with your questions
+2. **Community**: Join our Telegram group for community help
+3. **Documentation**: This guide and the main README cover most questions
+4. **Technical Issues**: Report bugs on our GitHub repository
+
+### For Developers and Advanced Users
+
+If you want to contribute to Walia or need to run advanced tests:
+- See our [Contributing Guide](CONTRIBUTING.md) for development setup
+- Check the `CLAUDE.md` file for detailed technical instructions
+- The original technical setup instructions are available in the git history
+
+### What's Next?
+
+Once you have Walia set up:
+1. **Try storing a few test files** to get comfortable with the system
+2. **Experiment with the access control features** - try sharing files with friends
+3. **Monitor your usage** to understand storage costs
+4. **Join our community** to stay updated on new features
+
+Walia is constantly improving, and we love hearing from our users about what features they'd like to see next! 
