@@ -1,268 +1,174 @@
-# Walia Telegram Bot
+# Walia Telegram Bot - Your File Storage Assistant
 
-A Telegram bot that serves as a Walrus storage assistant/manager, using grammY library and OpenAI API to provide natural language interaction with Walrus storage operations via MCP (Model Context Protocol).
+The easiest way to use Walia! Just chat with our Telegram bot to securely store, retrieve, and manage your files. No technical knowledge required.
 
-## Features
+## What the Bot Does
 
-- 🤖 **Natural Language Interface**: Chat naturally with the bot to manage your Walrus storage
-- 📁 **File Operations**: Store, retrieve, list, and manage files on Walrus storage
-- 🏷️ **Attribute Management**: Add and view custom attributes for your stored files
-- 🔐 **Secure Storage**: Uses seal-based encryption with whitelist access control
-- 💬 **Conversation Memory**: Maintains context across the conversation
-- ⚙️ **Configurable**: Per-user configuration for wallet settings
+- 💬 **Chat naturally** - Just talk to the bot like a friend
+- 📁 **Store any file** - Send documents, photos, videos, or any file type
+- 🔍 **Find your files** - Ask "what files do I have?" and get a complete list
+- 🔐 **Keep files secure** - Everything is encrypted before storage
+- 💰 **Show costs** - Know exactly how much storage costs before you use it
+- 🎯 **Smart responses** - The bot understands what you want to do
 
-## Architecture
+## How to Use the Bot
 
-```
-Telegram User → grammY Bot → OpenAI API → MCP Client → MCP Server → Walrus Storage
-```
+### Getting Started
+1. **Find the bot** on Telegram: Search for `@WaliaStorageBot`
+2. **Start chatting**: Send `/start` to begin
+3. **Follow setup**: The bot will guide you through initial setup
+4. **Start storing files**: Send any file or just ask questions!
 
-- **grammY**: Telegram bot framework for handling messages and commands
-- **OpenAI API**: Analyzes user intent and generates natural language responses
-- **MCP Client**: Connects to the Walia MCP server using stdio protocol
-- **MCP Server**: Provides Walrus storage operations as MCP tools
+### What You Can Say to the Bot
 
-## Prerequisites
+#### Store Files
+- Send any file directly to the bot
+- "Store this document for 6 months"
+- "Keep this photo safe for a year"
+- "Save this with high security"
 
-1. **Telegram Bot Token**:
-   - Message [@BotFather](https://t.me/botfather) on Telegram
-   - Create a new bot with `/newbot`
-   - Get your bot token
+#### Find Files
+- "What files do I have?"
+- "Show me all my documents"
+- "List my stored photos"
+- "Find files from last month"
 
-2. **OpenAI API Key**:
-   - Sign up at [OpenAI](https://platform.openai.com/)
-   - Create an API key in your dashboard
-
-3. **Walia MCP Server**:
-   - Ensure the TypeScript package is built and MCP server is functional
-   - Have a configured wallet environment in `dev-wallets/`
-
-## Installation
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Configure environment**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your tokens
-   ```
-
-3. **Build the project**:
-   ```bash
-   npm run build
-   ```
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file with:
-
-```env
-# Required
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Optional
-NODE_ENV=development
-WALIA_WALLETS_DIR=./dev-wallets
-```
-
-### Bot Configuration
-
-Bot configuration is fully automatic:
-
-- **Username**: Automatically set to `user_${telegram_user_id}` based on your Telegram user ID
-- **Wallets Directory**: Set via `WALIA_WALLETS_DIR` environment variable (defaults to `./dev-wallets`)
-- **Environment**: Fixed to `testnet` for security
-
-Users can view their current settings with:
-
-```
-/config
-```
-
-No manual configuration is needed or allowed - everything is automatically configured for security and isolation.
-
-## Usage
-
-### Starting the Bot
-
-```bash
-# Development mode
-npm run dev
-
-# Production mode
-npm run build
-npm start
-```
-
-### Bot Commands
-
-#### Basic Commands
-- `/start` - Welcome message and overview
-- `/help` - Show all available commands
-- `/status` - Show current configuration
-- `/config` - Configure wallet settings
-- `/address` - Get your wallet address
-- `/balance` - Check your wallet balance
-
-#### File Operations
-- `/list` - List all stored files
-- `/read <blob_id>` - Read a file by blob ID
-- `/attributes <object_id>` - View file attributes
-
-#### Natural Language Examples
-
-Users can interact naturally:
-- "Store my document.pdf with 10 epochs"
-- "List all my files"
-- "What files do I have stored?"
-- "Show me the attributes of file 0x123..."
-- "Delete all expired files"
+#### Check Status
+- "What's my balance?"
+- "How much storage space do I have?"
 - "What's my wallet address?"
-- "Check my balance"
-- "How much SUI do I have?"
-- "How does Walrus storage work?"
+- "Show my storage usage"
 
-## Bot Features
+#### Get Help
+- "How does this work?"
+- "What can you do?"
+- "Help me understand file storage"
+- "Explain the costs"
 
-### Command System
-- **Configuration Management**: Users can set their wallet parameters
-- **File Listing**: Browse stored files with metadata
-- **File Reading**: Retrieve and decrypt stored files
-- **Attribute Management**: View and manage file attributes
+## Bot Commands Reference
 
-### AI Assistant
-- **Intent Analysis**: Uses OpenAI to understand user requests
-- **Natural Responses**: Generates helpful, contextual responses
-- **Action Execution**: Maps user intents to MCP operations
-- **Conversation Context**: Maintains conversation history
+### Quick Commands
+- `/start` - Begin using the bot and get setup instructions
+- `/help` - See all available commands
+- `/balance` - Check your storage credits
+- `/list` - See all your stored files
+- `/config` - View your settings (read-only for security)
+- `/address` - Get your unique wallet address
 
-### MCP Integration
-- **Secure Communication**: Connects to MCP server via stdio
-- **Type Safety**: Strongly typed interfaces for all operations
-- **Error Handling**: Graceful error handling and user feedback
-- **Resource Management**: Proper connection lifecycle management
+### File Commands
+- `/read <file_id>` - Download a specific file by its ID
+- `/attributes <file_id>` - See details about a file
 
-## Development
+## Security & Privacy
 
-### Project Structure
+### Your Data is Safe
+- **Automatic encryption** - Files are encrypted before leaving your device
+- **You control access** - Only you can decrypt and read your files
+- **No data collection** - We don't store your messages or personal information
+- **Secure storage** - Files are stored on the decentralized Walrus network
 
-```
-src/
-├── index.ts          # Main entry point
-├── bot.ts            # Telegram bot implementation
-├── assistant.ts      # OpenAI integration and intent processing
-└── mcp-client.ts     # MCP client for Walrus operations
-```
+### How It Works
+1. **You send a file** to the bot
+2. **File gets encrypted** with your unique key
+3. **Encrypted file stored** on the secure Walrus network
+4. **You get a unique ID** to retrieve your file anytime
+5. **Only you can decrypt** and access the original file
 
-### Adding New Features
+## Costs and Credits
 
-1. **New Bot Commands**: Add to `setupCommands()` in `bot.ts`
-2. **New MCP Operations**: Add methods to `WaliaMCPClient`
-3. **New AI Intents**: Update intent analysis in `assistant.ts`
+### Free to Start
+- New users get free storage credits
+- Perfect for testing and trying out the system
+- No credit card required
 
-### Testing
+### Transparent Pricing
+- Pay only for what you use
+- Storage cost depends on file size and how long you store it
+- The bot shows you costs before storing files
+- No hidden fees or surprise charges
 
-```bash
-# Test MCP client connection
-npm run test-mcp
+### Getting More Credits
+Currently in testing mode with free testnet credits. When we launch officially:
+- Purchase credits with cryptocurrency
+- Subscription plans for heavy users
+- Enterprise pricing for businesses
 
-# Test bot locally with webhook
-npm run dev
-```
+## Frequently Asked Questions
 
-## Deployment
+### "Is my data really secure?"
+Yes! Your files are encrypted on your device before being sent anywhere. Even if someone intercepted the data, they couldn't read it without your private key.
 
-### Docker Deployment
+### "What happens if Walia goes offline?"
+Your files are stored on the decentralized Walrus network, not on our servers. Even if our service goes down, your files remain accessible through the Walrus network.
 
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist/ ./dist/
-CMD ["npm", "start"]
-```
+### "Can I share files with others?"
+Yes! Walia includes access control features that let you securely share files with specific people. You decide who can access what.
 
-### Environment Setup
+### "What file types can I store?"
+Any file type! Documents, photos, videos, archives, code files - if it's a file, Walia can store it securely.
 
-Ensure your deployment environment has:
-- Access to the Walia MCP server
-- Proper wallet configuration
-- Network access to Telegram API and OpenAI API
+### "How long are files stored?"
+You choose the storage duration when you store files (measured in "epochs"). Longer storage costs more, but you have complete control.
 
-## Security Considerations
+### "Is there a file size limit?"
+The Walrus network can handle large files, but there may be practical limits. The bot will let you know if a file is too large.
 
-1. **API Keys**: Store securely, never commit to version control
-2. **User Data**: Conversation history is stored in memory only
-3. **Wallet Access**: Each user's wallet configuration is isolated
-4. **MCP Communication**: Uses secure stdio protocol locally
+## Getting Support
 
-## Troubleshooting
+### Need Help Using the Bot?
+- **Ask the bot directly**: Just send a message like "I need help"
+- **Check the main guide**: See the [Setup Guide](../../SETUP_GUIDE.md) for general help
+- **Join our community**: Connect with other users in our Telegram group
 
-### Common Issues
+### Common Issues and Solutions
 
-1. **"Failed to connect to MCP server"**:
-   - Check if Walrus MCP package MCP server is running
-   - Verify the relative path to `../walrus_mcp`
+#### "The bot isn't responding"
+- Check that you're messaging the correct bot: `@WaliaStorageBot`
+- Make sure the bot isn't blocked or restricted on your account
+- Try sending `/start` to restart the conversation
 
-2. **"Bot token invalid"**:
-   - Verify your Telegram bot token
-   - Check for extra spaces in `.env` file
+#### "File upload failed"
+- Check your internet connection
+- Make sure the file isn't too large (the bot will warn you about limits)
+- Try again in a few minutes - network issues can cause temporary failures
 
-3. **"OpenAI API error"**:
-   - Verify your OpenAI API key
-   - Check your API usage limits
+#### "I can't find my stored files"
+- Use the `/list` command to see all your files
+- Files may take a few minutes to appear after storage
+- Make sure you're using the same account that stored the files
 
-4. **"Wallet configuration not found"**:
-   - Ensure wallet is properly set up in TypeScript package
-   - Check wallet directory path configuration
+#### "Bot says I don't have enough credits"
+- Check your balance with `/balance`
+- If you're out of test credits, the bot will help you get more
+- Remember this is currently a test system with free credits
 
-### Debug Mode
+### Advanced Users and Developers
 
-Enable verbose logging:
+If you want to help improve the bot or integrate it into other systems:
+- See our [Contributing Guide](../../CONTRIBUTING.md)
+- Check the technical documentation in the git history
+- The bot is open source - all code is available for review
 
-```bash
-NODE_ENV=development npm run dev
-```
+### Privacy and Data
 
-## API Reference
+- **No conversation storage**: Your messages aren't saved on our servers
+- **Local processing**: File encryption happens on your device
+- **Minimal data**: We only store what's necessary for the service to work
+- **Open source**: You can verify exactly what the bot does
 
-### MCP Client Methods
+### Future Features
 
-- `storeFile(params)` - Store a file to Walrus
-- `readFile(params)` - Read a file by blob ID
-- `listBlobs(params)` - List stored files
-- `getBlobAttributes(params)` - Get file attributes
-- `addBlobAttributes(params)` - Add file attributes
-- `burnBlobs(params)` - Delete files
-- `sendBlob(params)` - Transfer file to another address
-- `getBlobObjectId(params)` - Get object ID from blob ID
+We're constantly improving the bot! Coming soon:
+- Better file organization and search
+- Sharing files with friends via the bot
+- Integration with other messaging platforms
+- Mobile app companion
 
-### Bot Session Data
+## Quick Start Reminder
 
-```typescript
-interface SessionData {
-  userName: string;
-  walletsDir: string;
-  environment: string;
-  conversationHistory: ConversationMessage[];
-}
-```
+1. **Find `@WaliaStorageBot` on Telegram**
+2. **Send `/start`**
+3. **Follow the setup instructions**
+4. **Start storing files by sending them to the bot**
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is part of the Walia storage system and follows the same license terms.
+That's it! Welcome to secure, decentralized file storage made simple.
