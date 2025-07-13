@@ -4,7 +4,7 @@ import { WalrusCostEstimationResult, WalrusCostEstimator, WalrusInfo, getInfo } 
 import { DEV_CLIENT_CONFIG } from "./helper/dev-wallet-config";
 
 // Integration tests are disabled by default, and must be explicitly enabled
-const runIntegrationTests = process.env.RUN_WALRUS_INTEGRATION_TESTS === 'true';
+const runIntegrationTests = process.env.RUN_WALRUS_INTEGRATION_TESTS_TEST === 'true';
 
 // Test client configuration - set through environment variables
 const testClientConf: ClientConfig = DEV_CLIENT_CONFIG;

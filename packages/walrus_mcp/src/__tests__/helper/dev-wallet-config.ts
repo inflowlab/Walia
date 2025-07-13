@@ -7,17 +7,17 @@ import { ClientConfig } from "../../wallet-management";
  * 
  * This file provides configuration for using the development wallet in unit tests.
  * To use a different wallet, update these values or set environment variables:
- * - WALLET_USER_NAME
- * - WALLET_DIR
- * - WALLET_ENV
+ * - WALLET_USER_NAME_TEST
+ * - WALLET_DIR_TEST
+ * - WALLET_ENV_TEST
  */
 
 
 // Load configuration from environment variables if available
 const DEV_WALLET = {
-  userName: process.env.WALLET_USER_NAME || 'walia',
-  baseDir: process.env.WALLET_DIR || path.join(process.cwd(), 'dev-wallets'),
-  environment: (process.env.WALLET_ENV || 'testnet') as 'testnet' | 'mainnet' | 'localnet' | 'devnet',
+  userName: process.env.WALLET_USER_NAME_TEST || 'walia',
+  baseDir: process.env.WALLET_DIR_TEST || path.join(process.cwd(), 'dev-wallets'),
+  environment: (process.env.WALLET_ENV_TEST || 'testnet') as 'testnet' | 'mainnet' | 'localnet' | 'devnet',
   // We'll derive the address if needed
   address: ''
 };

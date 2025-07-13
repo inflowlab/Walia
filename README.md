@@ -1,6 +1,6 @@
 # Walia Project
 
-A monorepo containing both TypeScript and Move components for the Walia project.
+A monorepo containing both Walrus MCP and Move components for the Walia project.
 
 ## Repository Structure
 
@@ -9,7 +9,7 @@ This monorepo is organized as follows:
 ```
 walia/
 ├── packages/
-│   ├── typescript/  # TypeScript component for wallet management and storage
+│   ├── walrus_mcp/  # Walrus MCP component for wallet management and storage
 │   └── move/        # Move smart contracts
 │       └── walia_seal/  # Seal-based whitelist and capability contracts
 └── README.md
@@ -17,9 +17,9 @@ walia/
 
 ## Components
 
-### TypeScript Component
+### Walrus MCP Component
 
-The TypeScript component provides:
+The Walrus MCP component provides:
 
 - Wallet management for Sui and Walrus
 - Storage management for Walrus
@@ -49,16 +49,16 @@ npm install
 
 ## Development
 
-### TypeScript Component
+### Walrus MCP Component
 
 ```bash
-# Run TypeScript tests
+# Run Walrus MCP tests
 npm test
 
-# Build TypeScript component
+# Build Walrus MCP component
 npm run build
 
-# Run TypeScript development server
+# Run Walrus MCP development server
 npm run dev
 ```
 
@@ -75,7 +75,7 @@ sui move build
 
 ## Wallet Management
 
-See the [TypeScript package README](./packages/typescript/README.md) for detailed documentation on wallet management features.
+See the [Walrus MCP package README](./packages/walrus_mcp/README.md) for detailed documentation on wallet management features.
 
 ## Smart Contracts
 

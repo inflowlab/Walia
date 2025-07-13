@@ -1,0 +1,29 @@
+{
+  "name": "walia-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for Walia storage management using MCP server",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "bot": "tsx src/index.ts",
+    "bot:build": "tsc && node dist/index.js"
+  },
+  "keywords": ["telegram", "bot", "walrus", "storage", "mcp"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsx": "^4.20.3",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "grammy": "^1.25.0",
+    "openai": "^4.58.1",
+    "dotenv": "^16.6.1"
+  }
+}

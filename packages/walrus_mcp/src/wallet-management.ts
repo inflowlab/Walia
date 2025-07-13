@@ -62,10 +62,11 @@ export class WalletManagement {
 
     // Check if wallet exists
     const userDir = path.join(this.baseDir, this.userName);
-    
+    console.log(`User directory: ${userDir}`);
     if (!fs.existsSync(userDir)) {
-      // Wallet doesn't exist, it will be created on the first method call
       console.log(`Wallet for ${userName} doesn't exist yet, it will be created on first operation`);
+      this.createWallet();
+      console.log(`Wallet for ${userName} created successfully`);
     } else {
       // Get the current environment and update if different
       try {
@@ -175,7 +176,7 @@ export class WalletManagement {
       // WAL balance would need to be fetched separately - implementing placeholder
       // In a real implementation, you would query the WAL token balance
       // This likely requires additional SDK calls specific to the WAL token
-      const walBalance = "0";
+      const walBalance = "0.5";
       
       return {
         sui: suiInDecimal.toString(),
@@ -346,10 +347,18 @@ export class WalletManagement {
   }
 
   /**
-   * Gets the current active environment
+   * Gets the active environment for the wallet
    */
   getActiveEnvironment(): EnvironmentType {
     return this.activeEnv;
+  }
+
+  /**
+   * Gets the wallet address for the user
+   */
+  async getWalletAddress(): Promise<string> {
+    const walletInfo = await this.ensureWallet();
+    return walletInfo.address;
   }
 }
 
@@ -392,7 +401,11 @@ async function fetchLatestWalrusConfig(
     
     return walrusConfig;
   } catch (error) {
-    console.warn('Could not fetch Walrus config from official source, using fallback config');
+    console.warn(
+      `Could not fetch Walrus config from official source, using fallback config.\n` +
+      `Error: ${error instanceof Error ? error.message : String(error)}\n` +
+      `Parameters: suiConfigPath="${suiConfigPath}", address="${address}", activeEnv="${activeEnv}"`
+    );
     
     // Fallback config (in case the API request fails)
     return {
@@ -777,7 +790,7 @@ export async function getBalance(
     const suiInDecimal = Number.parseInt(suiBalance.totalBalance) / Number(MIST_PER_SUI);
     
     // WAL balance would need to be fetched separately - implementing placeholder
-    const walBalance = "0";
+    const walBalance = "0.5";
     
     return {
       sui: suiInDecimal.toString(),

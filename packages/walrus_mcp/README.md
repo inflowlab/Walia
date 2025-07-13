@@ -1,9 +1,9 @@
-import { SealConfig, SealManager, WalletManagement } from "@walia/typescript";
-import { SealConfig, SealManager, WalletManagement } from "@walia/typescript";
+import { SealConfig, SealManager, WalletManagement } from "@walia/walrus_mcp";
+import { SealConfig, SealManager, WalletManagement } from "@walia/walrus_mcp";
 
-# Walia TypeScript Component
+# Walia Walrus MCP Component
 
-This package contains the TypeScript implementation of wallet management, storage, and utility functionality for the Walia project.
+This package contains the Walrus MCP implementation of wallet management, storage, and utility functionality for the Walia project.
 
 ## Features
 
@@ -204,6 +204,128 @@ await burnBlobs(clientConf, [blob1.id, blob2.id]);
 const estimator = new WalrusCostEstimator(clientConf);
 await estimator.initialize();
 const cost = await estimator.estimateStorageCost(fileSize, epochs);
+```
+
+## MCP Server
+
+The project includes a Model Context Protocol (MCP) server that provides a standardized interface for interacting with Walia storage operations. The MCP server allows external applications (like the Telegram bot) to perform storage operations through a secure, structured API.
+
+### Starting the MCP Server
+
+```bash
+# Development mode (auto-reload on changes)
+npm run mcp-server:dev
+
+# Production mode (build and run)
+npm run mcp-server:build
+
+# Run pre-built version
+npm run mcp-server
+```
+
+### Available MCP Tools
+
+The MCP server provides the following tools:
+
+- **walia_store** - Store a file to Walrus with seal encryption
+- **walia_read** - Read and decrypt a file from Walrus
+- **walia_list_blobs** - List all blobs in Walrus storage
+- **walia_get_blob_attributes** - Get attributes for a specific blob
+- **walia_add_blob_attributes** - Add attributes to a blob
+- **walia_burn_blobs** - Delete blobs from Walrus storage
+- **walia_send_blob** - Transfer a blob to another Sui address
+- **walia_get_blob_object_id** - Get blob object ID from blob ID
+- **walia_get_wallet_balance** - Get SUI and Walrus balance for a wallet
+- **walia_get_wallet_address** - Get the wallet address for a user
+
+### MCP Client Integration
+
+Applications can connect to the MCP server using the standard MCP protocol:
+
+```typescript
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+const transport = new StdioClientTransport({
+  command: 'npm',
+  args: ['run', 'mcp-server']
+});
+
+const client = new Client({
+  name: 'walia-client',
+  version: '1.0.0'
+}, {
+  capabilities: {}
+});
+
+await client.connect(transport);
+
+// List available tools
+const tools = await client.request({
+  method: 'tools/list',
+  params: {}
+});
+
+// Store a file
+const result = await client.request({
+  method: 'tools/call',
+  params: {
+    name: 'walia_store',
+    arguments: {
+      userName: 'alice',
+      walletsDir: './dev-wallets',
+      environment: 'testnet',
+      filePath: './document.txt',
+      epochs: 5
+    }
+  }
+});
+
+// Get wallet address
+const address = await client.request({
+  method: 'tools/call',
+  params: {
+    name: 'walia_get_wallet_address',
+    arguments: {
+      userName: 'alice',
+      walletsDir: './dev-wallets',
+      environment: 'testnet'
+    }
+  }
+});
+
+// Get wallet balance
+const balance = await client.request({
+  method: 'tools/call',
+  params: {
+    name: 'walia_get_wallet_balance',
+    arguments: {
+      userName: 'alice',
+      walletsDir: './dev-wallets',
+      environment: 'testnet'
+    }
+  }
+});
+```
+
+### Environment Variables
+
+The MCP server supports environment variables for configuration:
+
+```bash
+# Set custom package ID for different environments
+export WALIA_SEAL_PACKAGE_ID=0x...
+
+# Environment-specific package IDs
+export WALIA_SEAL_PACKAGE_ID_TESTNET=0x...
+export WALIA_SEAL_PACKAGE_ID_MAINNET=0x...
+```
+
+### Testing the MCP Server
+
+```bash
+# Test MCP server connection and basic operations
+npm run test-mcp
 ```
 
 ## Seal Integration Features

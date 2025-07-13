@@ -1,21 +1,21 @@
 {
   "name": "walia-monorepo",
   "version": "1.0.0",
-  "description": "Walia project monorepo containing TypeScript and Move components",
+  "description": "Walia project monorepo containing Walrus MCP and Move components",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=packages/typescript",
+    "build": "npm run build --workspace=packages/walrus_mcp",
     "build:move": "cd packages/move/walia_move && sui move build",
-    "test": "npm run test --workspace=packages/typescript",
+    "test": "npm run test --workspace=packages/walrus_mcp",
     "test:move": "cd packages/move/walia_move && sui move test",
-    "dev": "npm run dev --workspace=packages/typescript",
-    "clean": "npm run clean --workspace=packages/typescript",
-    "clean-wallets": "npm run clean-wallets --workspace=packages/typescript",
-    "create-dev-wallet": "npm run create-dev-wallet --workspace=packages/typescript",
-    "install:all": "npm install && npm install --workspace=packages/typescript"
+    "dev": "npm run dev --workspace=packages/walrus_mcp",
+    "clean": "npm run clean --workspace=packages/walrus_mcp",
+    "clean-wallets": "npm run clean-wallets --workspace=packages/walrus_mcp",
+    "create-dev-wallet": "npm run create-dev-wallet --workspace=packages/walrus_mcp",
+    "install:all": "npm install && npm install --workspace=packages/walrus_mcp"
   },
   "keywords": [
     "sui",

@@ -228,6 +228,10 @@ export async function read(blobId: string, params: BlobParams, sealManager: Seal
         // Decrypt the file data
         const decryptedFilePath = await sealManager.decodeFile(outputPath, whitelistId);
         fs.unlinkSync(outputPath);
+        // Ensure decryptedFilePath is absolute
+        const absoluteDecryptedFilePath = path.isAbsolute(decryptedFilePath)
+            ? decryptedFilePath
+            : path.resolve(process.cwd(), decryptedFilePath);
         
         return decryptedFilePath;
     } catch (error) {
@@ -286,6 +290,10 @@ export async function get_blob_attributes(clientConf: ClientConfig, blobObjectId
 
 export async function list_blobs(clientConf: ClientConfig, includeExpired: boolean = false): Promise<BlobObject[]> {
     try {
+        console.info('list_blobs called with:', {
+            clientConf,
+            includeExpired
+        });
         let command = `walrus list-blobs --json`;
         
         if (includeExpired) {
@@ -309,7 +317,7 @@ export async function list_blobs(clientConf: ClientConfig, includeExpired: boole
             blob.formattedSize = formatBytes(blob.size);
             
             // Create timestamp from registered epoch
-            blob.timestamp = `Epoch ${blob.registeredEpoch}`;
+            // blob.timestamp = `Epoch ${blob.registeredEpoch}`;
             
             // Calculate expiry information if storage info is available
             if (blob.storage?.endEpoch) {

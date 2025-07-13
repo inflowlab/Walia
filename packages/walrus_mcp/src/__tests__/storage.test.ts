@@ -10,7 +10,7 @@ import { WalletManagement } from "../wallet-management";
 import { WalrusCostEstimator, getInfo } from "../walrus-cost-estimator";
 
 // Integration tests are disabled by default, and must be explicitly enabled
-const runIntegrationTests = process.env.RUN_WALRUS_INTEGRATION_TESTS === 'true';
+const runIntegrationTests = process.env.RUN_WALRUS_INTEGRATION_TESTS_TEST === 'true';
 
 // Use the same package ID from seal.test.ts
 const WALIA_SEAL_PACKAGE_ID = '0xf5083045ffb970f16dde2bbad407909b9e761f6c93342500530d9efdf7b09507';

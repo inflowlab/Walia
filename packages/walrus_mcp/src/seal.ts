@@ -161,7 +161,7 @@ export class SealManager {
       const decodedFilePath = filePath.replace('.enc', '');
       fs.writeFileSync(decodedFilePath, encryptedData);
 
-      console.log(`File decoded successfully: ${decodedFilePath}`);
+      // console.log(`File decoded successfully: ${decodedFilePath}`);
 
       return decodedFilePath;
     } catch (error) {

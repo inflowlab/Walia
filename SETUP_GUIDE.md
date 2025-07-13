@@ -20,7 +20,7 @@ The Walia project is a monorepo containing:
 ```
 walia/
 ├── packages/
-│   ├── typescript/              # TypeScript wallet and storage management
+│   ├── walrus_mcp/              # Walrus MCP wallet and storage management
 │   │   ├── src/                # Source code
 │   │   ├── __tests__/          # Test files
 │   │   ├── dev-wallets/        # Development wallet configurations
@@ -77,8 +77,8 @@ cd walia
 # Install all dependencies
 npm install
 
-# Install TypeScript-specific dependencies
-npm install --workspace=packages/typescript
+# Install Walrus MCP-specific dependencies
+npm install --workspace=packages/walrus_mcp
 ```
 
 ### 2. Verify Installation
@@ -87,8 +87,8 @@ npm install --workspace=packages/typescript
 # Check if builds work
 npm run build
 
-# Verify TypeScript builds
-cd packages/typescript
+# Verify Walrus MCP builds
+cd packages/walrus_mcp
 npm run build
 ```
 
@@ -103,7 +103,7 @@ The project includes scripts to create development wallets automatically:
 npm run create-dev-wallet
 
 # Or create with specific parameters
-cd packages/typescript
+cd packages/walrus_mcp
 npm run create-dev-wallet -- --userName=walia --walletsDir=./dev-wallets --environment=testnet
 ```
 
@@ -114,7 +114,7 @@ If you need to set up wallets manually:
 #### 1. Create Wallet Directory Structure
 
 ```bash
-# From packages/typescript directory
+# From packages/walrus_mcp directory
 mkdir -p dev-wallets/walia
 cd dev-wallets/walia
 ```
@@ -135,7 +135,7 @@ Create `sui_client.yaml`:
 
 ```yaml
 keystore:
-  File: /absolute/path/to/walia/packages/typescript/dev-wallets/walia/sui.keystore
+  File: /absolute/path/to/walia/packages/walrus_mcp/dev-wallets/walia/sui.keystore
 envs:
   - alias: testnet
     rpc: https://fullnode.testnet.sui.io:443
@@ -183,7 +183,7 @@ contexts:
       - "0x83b454e524c71f30803f4d6c302a86fb6a39e96cdfb873c2d1e93bc1c26a3bc5"
       - "0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1"
     wallet_config:
-      path: "/absolute/path/to/walia/packages/typescript/dev-wallets/walia/sui_client.yaml"
+      path: "/absolute/path/to/walia/packages/walrus_mcp/dev-wallets/walia/sui_client.yaml"
       active_env: testnet
       active_address: "YOUR_ADDRESS_HERE"
     rpc_urls:
@@ -251,9 +251,9 @@ sui client object YOUR_PACKAGE_ID
 sui client balance
 ```
 
-### 4. Update TypeScript Configuration
+### 4. Update Walrus MCP Configuration
 
-After deployment, update your TypeScript code with the new package ID:
+After deployment, update your Walrus MCP code with the new package ID:
 
 ```typescript
 // In your test or application code
