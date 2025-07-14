@@ -104,10 +104,11 @@ async function removeFiles(filePath: string, encodedFilePath: string): Promise<v
 }
 
 export async function store(filePath: string, params: BlobParams, sealManager: SealManager): Promise<StoreResult> {
+    let encodedFilePath: string | undefined;
+    
     try {
-
         const encodedFileResult = await sealManager.encodeFile(filePath);
-        const encodedFilePath = encodedFileResult.encodedFilePath;
+        encodedFilePath = encodedFileResult.encodedFilePath;
         const capId = encodedFileResult.capId;
         const whitelistId = encodedFileResult.whitelistId;
         // Add seal management attributes to track capId and whitelistId
@@ -197,6 +198,14 @@ export async function store(filePath: string, params: BlobParams, sealManager: S
             throw new Error('Failed to store file: Invalid response from Walrus CLI');
         }
     } catch (error) {
+        // Clean up files on error
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        if (encodedFilePath && fs.existsSync(encodedFilePath)) {
+            fs.unlinkSync(encodedFilePath);
+        }
+        
         console.error('Failed to store file:', error);
         throw error;
     }

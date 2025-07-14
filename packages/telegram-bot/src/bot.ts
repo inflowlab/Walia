@@ -223,8 +223,9 @@ export class WaliaTelegramBot {
       const blobId = args[0];
       await ctx.reply(`🔍 Reading file with blob ID: ${blobId}...`);
 
+      let filePath: string | undefined;
       try {
-        const filePath = await this.mcpClient.readFile({
+        filePath = await this.mcpClient.readFile({
           userName: ctx.session.userName,
           walletsDir: ctx.session.walletsDir,
           environment: ctx.session.environment,
@@ -269,15 +270,17 @@ export class WaliaTelegramBot {
           caption: `✅ File retrieved successfully!\n🆔 Blob ID: ${blobId}\n📎 Filename: ${originalFileName}`
         });
 
-        // Clean up the temporary file after sending
-        try {
-          fs.unlinkSync(filePath);
-        } catch (cleanupError) {
-          console.warn('Could not clean up temporary file:', cleanupError);
-        }
-
       } catch (error) {
         await ctx.reply(`❌ Error reading file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        // Clean up the temporary file in both success and error cases
+        if (filePath && fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch (cleanupError) {
+            console.warn('Could not clean up temporary file:', cleanupError);
+          }
+        }
       }
     });
 

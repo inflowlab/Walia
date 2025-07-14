@@ -173,14 +173,15 @@ export class WalletManagement {
       // Convert MIST to SUI
       const suiInDecimal = Number.parseInt(suiBalance.totalBalance) / Number(MIST_PER_SUI);
       
-      // WAL balance would need to be fetched separately - implementing placeholder
-      // In a real implementation, you would query the WAL token balance
-      // This likely requires additional SDK calls specific to the WAL token
-      const walBalance = "0.5";
-      
+      const walBalance = await this.suiClient.getBalance({
+        owner: walletInfo.address,
+        coinType: '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL'
+      });
+
+      const walInDecimal = Number.parseInt(walBalance.totalBalance) / Number(1_000_000_000);
       return {
         sui: suiInDecimal.toString(),
-        wal: walBalance
+        wal: walInDecimal.toString()
       };
     } catch (error) {
       console.error(`Error fetching balance: ${error}`);
@@ -560,7 +561,12 @@ export async function createWalletEnvironment(
     };
     
     const suiConfigPath = path.join(userDir, 'sui_client.yaml');
-    fs.writeFileSync(suiConfigPath, yaml.dump(suiConfig));
+    fs.writeFileSync(suiConfigPath, yaml.dump(suiConfig, { 
+      quotingType: '"',
+      forceQuotes: false,
+      flowLevel: -1,
+      lineWidth: -1
+    }));
 
     // Fetch the latest Walrus config instead of using hardcoded values
     const walrusConfig = await fetchLatestWalrusConfig(suiConfigPath, address, activeEnv);
@@ -790,11 +796,16 @@ export async function getBalance(
     const suiInDecimal = Number.parseInt(suiBalance.totalBalance) / Number(MIST_PER_SUI);
     
     // WAL balance would need to be fetched separately - implementing placeholder
-    const walBalance = "0.5";
+    const walBalance = await suiClient.getBalance({
+      owner: address,
+      coinType: '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL'
+    });
+    
+    const walInDecimal = Number.parseInt(walBalance.totalBalance) / Number(1_000_000_000);
     
     return {
       sui: suiInDecimal.toString(),
-      wal: walBalance
+      wal: walInDecimal.toString()
     };
   } catch (error) {
     console.error(`Error fetching balance: ${error}`);
