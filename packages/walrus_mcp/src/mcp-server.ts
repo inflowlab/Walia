@@ -123,12 +123,12 @@ class WaliaStorageMCPServer {
     };
 
     // Verify configuration files exist
-    if (!fs.existsSync(clientConfig.suiConfPath)) {
-      throw new Error(`Sui client configuration not found at: ${clientConfig.suiConfPath}`);
-    }
-    if (!fs.existsSync(clientConfig.walrusConfPath)) {
-      throw new Error(`Walrus client configuration not found at: ${clientConfig.walrusConfPath}`);
-    }
+    // if (!fs.existsSync(clientConfig.suiConfPath)) {
+    //   throw new Error(`Sui client configuration not found at: ${clientConfig.suiConfPath}`);
+    // }
+    // if (!fs.existsSync(clientConfig.walrusConfPath)) {
+    //   throw new Error(`Walrus client configuration not found at: ${clientConfig.walrusConfPath}`);
+    // }
 
     return { walletManagement, sealManager, clientConfig };
   }
